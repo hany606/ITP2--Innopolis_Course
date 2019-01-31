@@ -2,6 +2,7 @@
 int x = 7;
 int y = 5;
 
+const int BufferSize = 100;
 char nS[100];
 
 
@@ -93,6 +94,81 @@ char* space(char s[])
 	return nS;
 }
 
+//modifing the argument itself
+void modifyString(char s[])
+{
+	s[0] = 'm';
+}
+
+char* reverse(char s[])
+{
+	int n = len(s);
+
+	for(int i = 0 ; i < BufferSize; i++)
+	{
+		nS[i] = ' ';
+	}
+
+
+	for(int i = 0 ; i < n; i++)
+	{
+		nS[i] = s[n-i-1];
+	}
+	return nS;
+	
+}
+void mreverse(char s[])
+{
+	int n = len(s);
+	for(int i = 0 ; i < n/2; i++)
+	{
+		char tmp= s[n-i-1];
+		s[n-i-1] = s[i];
+		s[i] = tmp; 
+	}
+	
+}
+
+
+
+
+int check(char s[])
+{
+	int size = len(s);
+	int n = 0;
+	for(int i = 0; ; i++)
+	{
+		if((s[i] >= 'a' && s[i]<= 'z') || (s[i] >= 'A' && s[i]<= 'Z'))
+			n++;
+		if(s[i] == '\0')
+			break;
+	}
+	char ns[n];
+	int x = 0;
+	for(int i = 0; i < size; i++)
+	{
+		if((s[i] >= 'a' && s[i]<= 'z'))
+		{
+			ns[x] = s[i];
+			x++; 
+		}
+		if (s[i] >= 'A' && s[i]<= 'Z')
+		{
+			ns[x] = (char)s[i]-('A'-'a');
+			x++;
+		}
+	}
+	char* rs = reverse(ns);
+
+	int flag = 0;
+	for(int i = 0; i < n; i++)
+	{
+		if(rs[i] != rs[n-i-1])
+			flag = 1;
+	}
+	return (1-flag);
+}
+
 int main()
 {
 	
@@ -153,6 +229,14 @@ int main()
 	//using the power of formating of printf
 	printf("\nExtra Tasks:\nPower: %d\nString length: %d\nDelete space: %s\n",power(2,3),len("sad"),space("sp ace"));
 	//--------------------------
+	
+	printf("Check = %d", check("pan-Ap"));
+
+	char j[] = "abcd";
+	modifyString(j);
+	printf("\n%s",j);
+	mreverse(j);
+	printf("\n%s",j);
 	return 0;
 
 }
