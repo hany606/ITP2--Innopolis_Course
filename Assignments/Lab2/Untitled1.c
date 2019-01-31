@@ -47,8 +47,8 @@ void printMessage(season s)
 
 long long int power(int x,int n)
 {
-	long long int out = x;
-	for(int i = 0; i < n-1; i++)
+	long long int out = 1;
+	for(int i = 0; i < n;i++)
 	{
 		out *= x;
 	}
@@ -227,7 +227,7 @@ int main()
 	//implement power function
 
 	//using the power of formating of printf
-	printf("\nExtra Tasks:\nPower: %d\nString length: %d\nDelete space: %s\n",power(2,3),len("sad"),space("sp ace"));
+	printf("\nExtra Tasks:\nPower: %d\nString length: %d\nDelete space: %s\n",power(2,0),len("sad"),space("sp ace"));
 	//--------------------------
 	
 	printf("Check = %d", check("pan-Ap"));
@@ -237,6 +237,8 @@ int main()
 	printf("\n%s",j);
 	mreverse(j);
 	printf("\n%s",j);
+	
 	return 0;
+
 
 }
