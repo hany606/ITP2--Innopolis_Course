@@ -129,6 +129,38 @@ void mreverse(char s[])
 	
 }
 
+/*
+void func(char/int/.. s[])
+char s[] means you are passing the pointer to the first element of the array not the array.
+It is considered as passing the pointer by value not by reference. (Check it again)
+
+Questions??
+Ask the professor
+int len = 10;
+char s[len];
+Why does this work in some compilers and others no??????
+-maybe the compiler change the type to const
+-maybe store the array in the heap and deal with it as it is dealing with the stack....
+*/
+
+void removeSpace(char s[]){
+	int n = len(s);
+	int j;
+	for(int i = 0; i < n; i++)
+	{
+		if(s[i] == ' ')
+		{
+
+			for(j = i; j < n; j++)
+				s[j] = s[j+1];	
+			// printf("\n space");
+			// printf("%s",s);
+		}
+	}
+	s[j] = '\0';
+
+}
+
 
 
 
@@ -237,7 +269,10 @@ int main()
 	printf("\n%s",j);
 	mreverse(j);
 	printf("\n%s",j);
-	
+	char spaceWord[] = "a b c d e f g";
+	removeSpace(spaceWord);
+	printf("\n%s",spaceWord);
+	printf("z");
 	return 0;
 
 
