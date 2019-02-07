@@ -201,6 +201,17 @@ int check(char s[])
 	return (1-flag);
 }
 
+//detail about the string number of words, char, lines
+//use  files, *.txt, wrapper functions -> ?? (maybe as I understand - functions that have other pre implemented function and something extra)
+void detail(char s[])
+{
+	int n = len(s);
+	for(int i = 0; i < n; i++)
+	{
+
+	}
+}
+
 int main()
 {
 	
