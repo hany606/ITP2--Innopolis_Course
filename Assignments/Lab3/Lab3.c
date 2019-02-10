@@ -70,6 +70,32 @@ int strong(int mn, int mx){
     return mn-1;
 }
 
+void toBin(const int cn)
+{
+    const int size = ceil(log2(cn));
+    int arr[size];
+
+    
+    int n = cn;
+
+
+    int x = 0;
+    while(n != 0)
+    {
+        arr[size - x-1] = n%2;
+        // printf("%d",n%2);
+        n /= 2;
+        x++;
+    }
+    
+    for(int i = 0; i < size; i ++)
+    {   
+        printf("%d",arr[i]);   
+    }
+    printf("\n");
+
+}
+
 
 int len(char s[])
 {
@@ -195,6 +221,8 @@ int main()
         printf("No Strong Number from %d to %d", minRange, maxRange);
 
     wordsHistogram(s);
+
+    toBin(47);
 
 
 }
