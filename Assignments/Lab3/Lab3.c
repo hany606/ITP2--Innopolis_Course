@@ -125,11 +125,13 @@ void wordsHistogram(char s[]){
         }
         else if(s[i] == ' ')
         {
+            if(insideWord == 1){
+                if(wordLen <= 10 && wordLen > 0)
+                    sum[wordLen] ++;
+                else
+                    othersLength++;
+            }
             insideWord = 0;
-            if(wordLen <= 10 && wordLen > 0)
-                sum[wordLen] ++;
-            else
-                othersLength++;
             
             wordLen = 0;
 
@@ -138,14 +140,17 @@ void wordsHistogram(char s[]){
     }
     if(insideWord == 1)
     {
-        if(wordLen <= 10 && wordLen > 0)
-                sum[wordLen] ++;
-        else
-                othersLength++;
+        if(insideWord == 1){
+                if(wordLen <= 10 && wordLen > 0)
+                    sum[wordLen] ++;
+                else
+                    othersLength++;
+            }
+            insideWord = 0;
     }
     for(int i = 0; i < 10; i++)
     {
-        printf("%d: %d\n",sum[i], i);
+        printf("%d: %d\n",sum[i], i+1);
     }
     printf("Greater than 10 letters: %d\n",othersLength);
 
@@ -183,7 +188,7 @@ void wordsHistogram(char s[]){
 
 int main()
 {
-    char s[] = "abcd e ASc asd iijoun kndjnkjn abcdcaa aaaaaaaaaaaaaaaaaaaaaahhhhhhhhhhhhhhhhhhhhhhhhbbbbbbbbbbbbbbbcccccccccceeeeeeeeerrrrrrrrrrrraaaaaz";
+    char s[] = "abcd e ASc asd iijoun     s";
     const int MAX_BUFFER = 255;
 
     int histo [26];    
