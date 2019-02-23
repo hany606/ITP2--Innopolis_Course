@@ -168,7 +168,6 @@ void wordsHistogram(char s[]){
     for(int i = 0 ;i < mxrep; i++)
     {
         //printf("asdasd\n");
-        //problem in rep
         for (int j = 0; j <10; j++)
         {
             if(sum[j]-- > 0)
@@ -198,6 +197,8 @@ int main()
     //Not working as pipline file and as file reader??
     // scanf("%s",&s);
     // get-content .\file.txt | .\a.exe
+
+    // https://ss64.com/nt/syntax-redirection.html
 
     // FILE *fp;
     // char s[MAX_BUFFER];

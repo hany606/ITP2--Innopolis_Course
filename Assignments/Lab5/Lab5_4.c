@@ -3,7 +3,7 @@
 #include<string.h>
 
 
-//know how to work with char *s as arguments
+//know how to work with char *s as arguments -- Ans: they are the same
 int stringCmpEnd(char s[], char t[]) {
     int sizeS = 0;
     int sizeT = 0;
@@ -39,6 +39,6 @@ int stringCmpEnd(char s[], char t[]) {
 }
 
 int main() {
-    printf("%d",stringCmpEnd("ASDa","da"));
+    printf("%d",stringCmpEnd("ASDa","Da"));
     
 }
