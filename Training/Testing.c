@@ -26,7 +26,10 @@ int main() {
    char *s = "Hello";
    int h = 10;
    s = "568asdlkmsalkmsadlkmasdlkmd";
-   printf("%s - %d",s,h);
+   printf("%s - %d",s,h); 
+
+   printf("\n%6.0f",1235.84651681);
+   int a, b, c;
 
    
 
