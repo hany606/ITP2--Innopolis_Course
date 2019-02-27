@@ -10,6 +10,8 @@
 
 // };
 
+#define BASE_YEAR 1900
+
 
 struct{
     unsigned short day :5;
