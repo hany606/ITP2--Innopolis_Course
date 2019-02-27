@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
       //Why this was working
       // dptr = &tvar;
       // *dptr = 10;
-      printf("\n%d\n",(**dptr));
+      // printf("\n%d\n",(**dptr));
 
 }
 
