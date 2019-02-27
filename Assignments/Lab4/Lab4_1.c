@@ -7,7 +7,7 @@ int main(int argc, char *argv){
     FILE *fptr;
     fptr = fopen("./file1.txt","r");
     /*
-        -There are two pointers points to the std input (command line)
+        -There are two pointers points to the std output (command line)
         -When you make pipe for the output stdout change to the pipe file but stderr always points to the std command line
     */
     if(fptr == NULL){
