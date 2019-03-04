@@ -211,16 +211,23 @@ int main(int argc, char **argv) {
       int arre[12];
       printf("%d", sizeof(arre)/sizeof(arre[0]));
 
-      int tvar = 55;
-      int **dptr;
-      int *ptr1;
-      ptr1 = &tvar;
-      dptr = &ptr1;
-      **dptr = 10;
+      // int tvar = 55;
+      // int **dptr;
+      // int *ptr1;
+      // ptr1 = &tvar;
+      // dptr = &ptr1;
+      // **dptr = 10;
       //Why this was working
       // dptr = &tvar;
       // *dptr = 10;
       // printf("\n%d\n",(**dptr));
+
+      int g = 1;
+      printf("\n%d %d %d %d\n", g,--g, --g, g++);
+      
+      int g2 = 1;
+      printf("\n%d %d %d\n", --g2, g2, g2++);
+      
 
 }
 
