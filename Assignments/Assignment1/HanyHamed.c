@@ -39,7 +39,7 @@ int getToken(int f) {
     int tmp = 0;
     int counter = 0;
     int insignificantZeroFlag = 0;
-    int negativeValueFlag = 1;
+    int negativeValueFlag = 0;
     char c;
     while(1) {
         c = getc(input);
@@ -55,7 +55,13 @@ int getToken(int f) {
             continue;   // as tmp is already 0
         }
         else if(counter == 0 && c == '-') {
-            negativeValueFlag = -1;
+            negativeValueFlag = 1;
+            counter++;
+            continue;
+        }
+
+        else if(c == '*'){
+            tmp = -25;
             counter++;
             continue;
         }
@@ -63,19 +69,28 @@ int getToken(int f) {
             programBreaker(7);
         
         // if it should new line but it is EOF (less size) if it should be space but it is new line or EOF,,, if it should be EOF but it is new line and there is another input (more size) ,,, 
-        else if((f == 3 && c == EOF) || (f == 0 && (c == EOF || c == '\n')) || (f == 2 && c == '\n' && ((c = getc(input) >= '0') && c <= '9')) ) 
+        else if((f == 3 && c == EOF) || (f == 0 && (c == EOF || c == '\n')) || (f == 3 && c == ' ' && ((c = getc(input) >= '0') && c <= '9')) || (f == 2 && c == '\n' && ((c = getc(input) >= '0') && c <= '9')) ) 
             programBreaker(4);
 
         // This have been added seperately to check first other symbol or not
         else if(!(c >= '0' && c <= '9'))
             programBreaker(7);
-
+        
         if(insignificantZeroFlag == 1)
             programBreaker(7);
         tmp = 10*tmp + (c - '0');
         counter++;
     }
-    return tmp*negativeValueFlag;
+    if(negativeValueFlag == 1)
+        programBreaker(5);
+
+    return tmp;
+}
+
+int rangeDistantValidation(int tmp, int i, int j) {
+    if(tmp != -25 && ((!(tmp >= 1 && tmp <= 20) && i != j) || i == j && tmp != 0))
+        return 1;
+    return 0;
 }
 
 
@@ -110,10 +125,10 @@ int main() {
     flag.initialCity = 1;
     printf("------------\n");
 
-    initialCity = getToken(1);
-    if(!(initialCity >= 0 && initialCity <= numberCities-1)) 
+    destinationCity = getToken(1);
+    if(!(destinationCity >= 0 && destinationCity <= numberCities-1)) 
         programBreaker(2);
-    flag.initialCity = 1;
+    flag.destinationCity = 1;
     printf("------------\n");
     
     printf("%d:%d:%d\n",numberCities,initialCity,destinationCity);
@@ -132,7 +147,7 @@ int main() {
             tmp = getToken(0);
             printf("%d ",tmp);
 
-            if((!(tmp >= 1 && tmp <= 20) && i != j) || i == j && tmp != 0)
+            if(rangeDistantValidation(tmp,i,j) == 1)
                 programBreaker(5);
             
             // printf("%d ",tmp);
@@ -143,17 +158,20 @@ int main() {
             break;
 
         tmp = getToken(3);
-        if((!(tmp >= 1 && tmp <= 20) && i != j) || i == j && tmp != 0)
+        if(rangeDistantValidation(tmp,i,j) == 1)
             programBreaker(5);
         adjMatrix[i][j] = tmp; 
         printf("%d\n",tmp);
 
     }
     tmp = getToken(2);
-        if((!(tmp >= 1 && tmp <= 20) && i != j) || i == j && tmp != 0)
+    if(rangeDistantValidation(tmp,i,j) == 1)
         programBreaker(5);
     adjMatrix[i][j] = tmp; 
     printf("%d\n",tmp);
+
+    if(adjMatrix[destinationCity][initialCity] == -25)
+        programBreaker(6);
 
     return 0;
 }
