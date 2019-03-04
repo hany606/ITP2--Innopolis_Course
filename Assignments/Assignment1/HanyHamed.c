@@ -47,9 +47,6 @@ int getToken(int f) {
         if((c == ' ' && f == 0 && counter != 0) || (c == '\n' && (f == 1 || f == 3) && counter != 0) || (c == EOF && f == 2 && counter != 0))
             break;
         
-        // if it should be EOF but it is new line and there is another input (more size) ,,, if it should new line but it is EOF (less size) if it should be space but it is new line or EOF
-        else if((f == 2 && c == '\n' && ((c = getc(input) >= '0') && c <= '9')) || (f == 3 && c == EOF) || (f == 0 && (c == EOF || c == '\n')) )
-            programBreaker(4);
 
         // insignificant zero
         else if(counter == 0 && c == '0') {
@@ -62,7 +59,15 @@ int getToken(int f) {
             counter++;
             continue;
         }
-        else if(!(c >= '0' && c <= '9') || (counter == 0 && c == ' ') || (counter == 0 && c == '\n') || (counter == 0 && c == EOF))
+        else if((counter == 0 && c == ' ') || (counter == 0 && c == '\n') || (counter == 0 && c == EOF))
+            programBreaker(7);
+        
+        // if it should new line but it is EOF (less size) if it should be space but it is new line or EOF,,, if it should be EOF but it is new line and there is another input (more size) ,,, 
+        else if((f == 3 && c == EOF) || (f == 0 && (c == EOF || c == '\n')) || (f == 2 && c == '\n' && ((c = getc(input) >= '0') && c <= '9')) ) 
+            programBreaker(4);
+
+        // This have been added seperately to check first other symbol or not
+        else if(!(c >= '0' && c <= '9'))
             programBreaker(7);
 
         if(insignificantZeroFlag == 1)
