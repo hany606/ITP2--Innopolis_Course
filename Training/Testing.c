@@ -56,6 +56,12 @@ int main(int argc, char **argv) {
    int a, b, c;
 
    int arr[] = {1,2,2};
+   
+   //arr++;   //This cannot be done here as it is a const pointer
+   //but it works only if an array is an argument for a function so it passes a pointer to the first element in the array not copying the array
+   //void func(int arr[]) when we write the argument like this that means that we pass a pointer to the first element and we can do:  arr++;
+
+
    // This will not give you an error but will give you wrong data that should not be accessed
    int *po = arr;
    // po -= 5;
