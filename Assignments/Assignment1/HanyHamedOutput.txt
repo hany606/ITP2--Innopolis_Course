@@ -1,0 +1,1 @@
+Initial and destination cities are not connected

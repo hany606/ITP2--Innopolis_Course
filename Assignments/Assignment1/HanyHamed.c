@@ -29,7 +29,8 @@ typedef struct flags
 
 
 void programBreaker(int i) {
-    printf("%s",errors[i-1]);
+
+    fprintf(output,"%s",errors[i-1]);
     fclose(input);
     fclose(output);
     exit(i);
@@ -100,6 +101,7 @@ int main() {
 
     input = fopen("input.txt","r");
     output = fopen("HanyHamedOutput.txt","w");
+    
     char c;
     int numberCities = 0;
     int initialCity = 0;
@@ -172,6 +174,11 @@ int main() {
 
     if(adjMatrix[destinationCity][initialCity] == -25)
         programBreaker(6);
+
+
+    //Dijkstra
+
+    
 
     return 0;
 }
