@@ -14,18 +14,13 @@ const char *errors[7] = {
 FILE *input;
 FILE *output;
 
-typedef struct flags
+typedef struct Node
 {
-    int numberCities:1;
-    int initialCity:1;
-    int destinationCity:1;
-    int blankLine:1;
-    int matrixSize:1;
-    int distancesValid:1;
-    int initialDestinationEdgeValid:1;
-    int inputStructure:1;
-    
-}ValidationFlag;
+    int cost;
+    int visited:1;
+    int numberBestCostsCities;  //This will indicate also if there this is the source or not that it will be zero
+    struct Node *prev[49];
+}City;
 
 
 void programBreaker(int i) {
@@ -107,7 +102,6 @@ int main() {
     int initialCity = 0;
     int destinationCity = 0;
     int counter = 0;
-    ValidationFlag flag;
     
 
 
@@ -118,24 +112,15 @@ int main() {
     numberCities = getToken(0);
     if(!(numberCities >= 5 && numberCities <= 50)) 
         programBreaker(1);
-    flag.numberCities = 1;
-    printf("------------\n");
 
     initialCity = getToken(0);
     if(!(initialCity >= 0 && initialCity <= numberCities-1)) 
         programBreaker(2);
-    flag.initialCity = 1;
-    printf("------------\n");
 
     destinationCity = getToken(1);
     if(!(destinationCity >= 0 && destinationCity <= numberCities-1)) 
         programBreaker(2);
-    flag.destinationCity = 1;
-    printf("------------\n");
     
-    printf("%d:%d:%d\n",numberCities,initialCity,destinationCity);
-    printf("------------\n");
-
     c = fgetc(input);
     if(c != '\n')
         programBreaker(7);
@@ -147,12 +132,9 @@ int main() {
         for(j = 0 ; j < numberCities-1; j++) {
 
             tmp = getToken(0);
-            printf("%d ",tmp);
-
             if(rangeDistantValidation(tmp,i,j) == 1)
                 programBreaker(5);
             
-            // printf("%d ",tmp);
             adjMatrix[i][j] = tmp;
 
         }
@@ -163,22 +145,63 @@ int main() {
         if(rangeDistantValidation(tmp,i,j) == 1)
             programBreaker(5);
         adjMatrix[i][j] = tmp; 
-        printf("%d\n",tmp);
-
     }
     tmp = getToken(2);
     if(rangeDistantValidation(tmp,i,j) == 1)
         programBreaker(5);
     adjMatrix[i][j] = tmp; 
-    printf("%d\n",tmp);
 
     if(adjMatrix[destinationCity][initialCity] == -25)
         programBreaker(6);
 
 
     //Dijkstra
-
+    //Check if the structure values of the vars initialized with zeros
+    City cities[numberCities];
+    cities[initialCity].cost = 0;
+    cities[initialCity].numberBestCostsCities = 0;
+    cities[initialCity].visited = 0;
     
+    for(int i = 0; i < numberCities; i++) {
+        if(i != initialCity) {
+            cities[i].cost = 21;    //more than the max cost
+            cities[i].numberBestCostsCities = 0;
+            cities[i].visited = 0;
+        }
+    }
+
+    for(int i = 0; i < numberCities; i++) {
+        City *v;
+        int mnCost = 0;
+        int mnIndexCity = 0;
+        //Choose the min cost that for first cycle it will be initial city
+        for(int x = 0; x <numberCities; x++) {
+            if(mnCost >= cities[x].cost && cities[x].visited == 0) {
+                printf("%d\n",mnIndexCity);
+                v = &(cities[x]);
+                mnIndexCity = x;
+                mnCost = cities[x].cost;
+            }
+            
+        }
+
+        for(int j = 0; j < numberCities; j++) {
+            //If it is connected to it or not
+            if(j != mnIndexCity && adjMatrix[j][mnIndexCity] != -25 && cities[j].visited == 0) {
+                int tmp = (v->cost)+adjMatrix[j][mnIndexCity] ;
+                if(tmp < cities[j].cost){
+                    cities[j].cost = tmp;
+                }
+                
+            }
+        }
+        v->visited = 1;
+    }
+
+    printf("%d", cities[destinationCity].cost);
+
+
+
 
     return 0;
 }
