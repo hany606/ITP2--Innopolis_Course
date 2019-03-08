@@ -13,9 +13,11 @@ const char *errors[7] = {
                             };
 FILE *input;
 FILE *output;
+int numberShortestPaths = 0;
 
 typedef struct Node
 {
+    int index;
     int cost;
     int visited:1;
     int numberBestCostsCities;  //This will indicate also if there this is the source or not that it will be zero
@@ -37,6 +39,8 @@ int getToken(int f) {
     int insignificantZeroFlag = 0;
     int negativeValueFlag = 0;
     char c;
+    int flagNumbers = 0;
+    int flagStar = 0;
     while(1) {
         c = getc(input);
 
@@ -59,6 +63,7 @@ int getToken(int f) {
         else if(c == '*'){
             tmp = -25;
             counter++;
+            flagStar = 1;
             continue;
         }
         else if((counter == 0 && c == ' ') || (counter == 0 && c == '\n') || (counter == 0 && c == EOF))
@@ -75,11 +80,15 @@ int getToken(int f) {
         if(insignificantZeroFlag == 1)
             programBreaker(7);
         tmp = 10*tmp + (c - '0');
+        flagNumbers = 1;
         counter++;
     }
     if(negativeValueFlag == 1)
         programBreaker(5);
 
+    //To solve the invalid input e.g. 1*
+    if(flagNumbers == 1 && flagStar == 1)
+        programBreaker(7);  
     return tmp;
 }
 
@@ -87,6 +96,19 @@ int rangeDistantValidation(int tmp, int i, int j) {
     if(tmp != -25 && ((!(tmp >= 1 && tmp <= 20) && i != j) || i == j && tmp != 0))
         return 1;
     return 0;
+}
+
+void printAllPaths(City *c) {
+    if(c != NULL && c->prev == NULL) {
+        //print
+        //global var
+        numberShortestPaths++;
+        printf("%d. %d",numberShortestPaths,c->index);
+    }
+    for(int x = 0; x < c->numberBestCostsCities; x++) {
+        printAllPaths(c->prev[x]);
+        printf(" -> %d",c->index);
+    }
 }
 
 
@@ -134,6 +156,8 @@ int main() {
             tmp = getToken(0);
             if(rangeDistantValidation(tmp,i,j) == 1)
                 programBreaker(5);
+            if(i == j && tmp != 0)
+                programBreaker(7);
             
             adjMatrix[i][j] = tmp;
 
@@ -150,6 +174,8 @@ int main() {
     if(rangeDistantValidation(tmp,i,j) == 1)
         programBreaker(5);
     adjMatrix[i][j] = tmp; 
+    if(i == j && tmp != 0)
+        programBreaker(7);
 
     if(adjMatrix[destinationCity][initialCity] == -25)
         programBreaker(6);
@@ -159,26 +185,26 @@ int main() {
     //Check if the structure values of the vars initialized with zeros
     City cities[numberCities];
     cities[initialCity].cost = 0;
-    cities[initialCity].numberBestCostsCities = 0;
-    cities[initialCity].visited = 0;
+    cities[initialCity].prev[0] = NULL;
     
     for(int i = 0; i < numberCities; i++) {
-        if(i != initialCity) {
+        if(i != initialCity)
             cities[i].cost = 21;    //more than the max cost
-            cities[i].numberBestCostsCities = 0;
-            cities[i].visited = 0;
-        }
+        
+        cities[i].numberBestCostsCities = 0;
+        cities[i].index = i;
+        cities[i].visited = 0;
+
     }
 
     for(int i = 0; i < numberCities; i++) {
-        City *v;
-        int mnCost = 0;
+        City *mnCity;
+        int mnCost = 20*numberCities;
         int mnIndexCity = 0;
         //Choose the min cost that for first cycle it will be initial city
         for(int x = 0; x <numberCities; x++) {
             if(mnCost >= cities[x].cost && cities[x].visited == 0) {
-                printf("%d\n",mnIndexCity);
-                v = &(cities[x]);
+                mnCity = &(cities[x]);
                 mnIndexCity = x;
                 mnCost = cities[x].cost;
             }
@@ -188,17 +214,33 @@ int main() {
         for(int j = 0; j < numberCities; j++) {
             //If it is connected to it or not
             if(j != mnIndexCity && adjMatrix[j][mnIndexCity] != -25 && cities[j].visited == 0) {
-                int tmp = (v->cost)+adjMatrix[j][mnIndexCity] ;
+                int tmp = (mnCity->cost)+adjMatrix[j][mnIndexCity] ;
                 if(tmp < cities[j].cost){
                     cities[j].cost = tmp;
+                    if(cities[j].numberBestCostsCities > 0) {
+                        for(int x = 0; x < cities[j].numberBestCostsCities; x++) {
+                            cities[j].prev[x] = NULL;
+                        }
+                    }
+                    cities[j].numberBestCostsCities = 1;
+                    cities[j].prev[0] = mnCity;   
+                }
+                else if(tmp == cities[j].cost) {
+                    cities[j].prev[cities[j].numberBestCostsCities] = mnCity;
+                    cities[j].numberBestCostsCities++;
                 }
                 
             }
         }
-        v->visited = 1;
+        mnCity->visited = 1;
     }
 
-    printf("%d", cities[destinationCity].cost);
+    printf("The shortest path is %d\nThe number of shortest paths is 1:\n",cities[destinationCity].cost);
+    //Then come back again to this line and edit it again
+    printAllPaths(cities[destinationCity].prev[0]);
+    
+    // printf("%d", (*cities[destinationCity].prev[cities[destinationCity].numberBestCostsCities-1]).cost);
+
 
 
 
