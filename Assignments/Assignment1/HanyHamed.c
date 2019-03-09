@@ -13,7 +13,7 @@ const char *errors[7] = {
                             };
 FILE *input;
 FILE *output;
-int numberShortestPaths = 0;
+int shortestPathsCounter = 0;
 
 typedef struct Node
 {
@@ -98,17 +98,35 @@ int rangeDistantValidation(int tmp, int i, int j) {
     return 0;
 }
 
+
+void countAllPaths(City *c) {
+    if(c->numberBestCostsCities == 0) {
+        shortestPathsCounter++;
+        return;
+    }
+    for(int x = 0; x < c->numberBestCostsCities; x++) {
+        countAllPaths(c->prev[x]);
+    }
+
+}
+
+int shortestPathNumber = 0;
+int printNewLineFlag = 0;
 void printAllPaths(City *c) {
-    if(c != NULL && c->prev == NULL) {
-        //print
-        //global var
-        numberShortestPaths++;
-        printf("%d. %d",numberShortestPaths,c->index);
+    if(c->numberBestCostsCities == 0) {
+        shortestPathNumber++;
+        if(printNewLineFlag == 1) {
+            fprintf(output,"\n");
+        }
+        printNewLineFlag = 1;
+        fprintf(output,"%d. %d",shortestPathNumber,c->index);
+        return;
     }
     for(int x = 0; x < c->numberBestCostsCities; x++) {
         printAllPaths(c->prev[x]);
-        printf(" -> %d",c->index);
+        fprintf(output," -> %d",c->index);
     }
+
 }
 
 
@@ -117,7 +135,7 @@ void printAllPaths(City *c) {
 int main() {
 
     input = fopen("input.txt","r");
-    output = fopen("HanyHamedOutput.txt","w");
+    output = fopen("HanyHamedOutput.txt","w+"); //In order to redit in the file
     
     char c;
     int numberCities = 0;
@@ -235,14 +253,13 @@ int main() {
         mnCity->visited = 1;
     }
 
-    printf("The shortest path is %d\nThe number of shortest paths is 1:\n",cities[destinationCity].cost);
-    //Then come back again to this line and edit it again
-    printAllPaths(cities[destinationCity].prev[0]);
+    countAllPaths(&cities[destinationCity]);
+
+    fprintf(output,"The shortest path is %d\nThe number of shortest paths is %d:\n",cities[destinationCity].cost,shortestPathsCounter);
+    printAllPaths(&cities[destinationCity]);
     
-    // printf("%d", (*cities[destinationCity].prev[cities[destinationCity].numberBestCostsCities-1]).cost);
-
-
-
+    fclose(input);
+    fclose(output);
 
 
     return 0;
