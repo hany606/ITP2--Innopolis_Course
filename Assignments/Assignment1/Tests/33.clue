@@ -1,0 +1,1 @@
+Chosen destination city does not exist

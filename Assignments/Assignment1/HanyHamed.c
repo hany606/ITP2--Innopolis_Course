@@ -1,7 +1,19 @@
 #include<stdlib.h>
-#include<string.h>
 #include<stdio.h>
 
+/**
+ * Introduction to Programming 2 (ITP2)
+ * Innopolis University, Sprinng 2019
+ * Assignment 1
+ * Author Hany Hamed
+ */
+
+#define MINCityCost 1
+#define MAXCityCost 20
+#define MINNumberCities 5
+#define MAXNumberCities 50
+
+// This is an array of strings for the errors messages
 const char *errors[7] = {
                             "Number of cities is out of range",
                             "Chosen initial city does not exist",
@@ -11,253 +23,363 @@ const char *errors[7] = {
                             "Initial and destination cities are not connected",
                             "Structure of the input is invalid"
                             };
+
+//Global Pointers for File I/O
 FILE *input;
 FILE *output;
-int shortestPathsCounter = 0;
 
+int i,j;                //Global variables to store the index where the reading process is on, to pass it to the validation of distance between cities
+int initialCity = 0;    //Global variable for the index of the Initial City 
+int destinationCity = 0;//Global variable for the index of the Destination City
+
+//Stucture that describe each city in the graph in the Dijkstra Algorithm
 typedef struct Node
 {
-    int index;
-    int cost;
-    int visited:1;
-    int numberBestCostsCities;  //This will indicate also if there this is the source or not that it will be zero
-    struct Node *prev[49];
+    int index;                  //Store the index of the city
+    int cost;                   //Store the cost that results from Dijkstra Algorithm
+    unsigned int visited:1;     //Flag to indicate if the city visited or not
+    int numberBestCostsCities;  //Indicate how many city have the same best cost from this city
+    struct Node *prev[49];      //Store the cities that have the same best cost from this city
 }City;
 
 
+/*
+ * Function:  programBreaker 
+ * --------------------
+ *  Output the specific error according to the parameter i and close files and the program
+ *  i: the number of the error, [one-indexed]
+ */
 void programBreaker(int i) {
 
-    fprintf(output,"%s",errors[i-1]);
-    fclose(input);
+    fprintf(output,"%s",errors[i-1]);   //Print the specific Error
+    //Close the input and the output files
+    fclose(input);                      
     fclose(output);
-    exit(i);
+    exit(i);                            //Exit the program
 }
 
+/*
+ * Function:  rangeDistantValidation 
+ * --------------------
+ *  Validate if the number in the argument is correct to our input constrains or not and if it is in the diagonal and not equal to zero
+ *  tmp: indicate the cost from city i to city j (the Global variables)
+ *  returns: 1 if it is valid, otherwise 0
+ */
+int rangeDistantValidation(int tmp) {
+    if( (!(tmp >= MINCityCost && tmp <= MAXCityCost) && i != j) 
+        || (i == j && tmp != 0))
+        return 1;
+    return 0;
+}
+
+
+/*
+ * Function:  getToken 
+ * --------------------
+ * Get a token which is number of cities, initial city, destination city and costs 
+ * and validate if they have the correct format or not depending on the flag
+ * f: Flag to describe the correct position of the read token
+ *    it can be 0: Read Number of Cities/Initial City + space ' '
+ *              1: Read Destination City + End of the line '\n' 
+ *              2: Read the last cost in the matrix + EOF
+ *              3: Read the last cost in the each line + End of the line '\n
+ *              4: Read the cost + space ' '
+ * returns: the number which describe the specific token 
+ */
 int getToken(int f) {
-    int tmp = 0;
-    int counter = 0;
-    int insignificantZeroFlag = 0;
-    int negativeValueFlag = 0;
-    char c;
-    int flagNumbers = 0;
-    int flagStar = 0;
+    int tmp = 0;                    //Store the temporary value of the input until we read all the token successfully
+    int counter = 0;                //Store how many character we successfully read
+    int insignificantZeroFlag = 0;  //Flag to indicate if there is an insignificant Zero or not to raise error
+    int negativeValueFlag = 0;      //Flag to indicate if there is '-'
+    char c;                         //variable to store the read character from the file
+    int numbersFlag = 0;            //Flag to indicate if the input for the token has a number
+    int starFlag = 0;               //Flag to indicate if there is '*'
+    //Loop until there is error break the code or it read and return successfully
     while(1) {
         c = getc(input);
 
-        if((c == ' ' && f == 0 && counter != 0) || (c == '\n' && (f == 1 || f == 3) && counter != 0) || (c == EOF && f == 2 && counter != 0))
+
+        //This to validate the same input format we need
+        if((c == ' ' && (f == 0|| f == 4) && counter != 0)      //If it reads a token in the middle followed by space and the input is not an empty space
+        || (c == '\n' && (f == 1 || f == 3) && counter != 0)    //If it reads a token in the End of the row followed by '\n' and the input is not an empty space
+        || (c == EOF && f == 2 && counter != 0))                //If it reads the last token followed by EOF and the input is not the empty space
             break;
         
 
-        // insignificant zero
+        // Insignificant Zero validation
         else if(counter == 0 && c == '0') {
             insignificantZeroFlag = 1;
-            counter++;
-            continue;   // as tmp is already 0
+            counter++;                  //Increase the counter of characters we read
+            continue;                   //Go to the next iteration to read the next character as if it was number, it will be error, if it was space or \n depending on the flag it will be just zero token
         }
+
+        // Minus sign validation
         else if(counter == 0 && c == '-') {
             negativeValueFlag = 1;
             counter++;
             continue;
         }
 
+        // Star sign validation
         else if(c == '*'){
-            tmp = -25;
+            tmp = MAXCityCost+1;       //Store in the tmp the highest cost we have to return if all pther validations correct
             counter++;
-            flagStar = 1;
+            starFlag = 1;
             continue;
         }
-        else if((counter == 0 && c == ' ') || (counter == 0 && c == '\n') || (counter == 0 && c == EOF))
-            programBreaker(7);
-        
-        // if it should new line but it is EOF (less size) if it should be space but it is new line or EOF,,, if it should be EOF but it is new line and there is another input (more size) ,,, 
-        else if((f == 3 && c == EOF) || (f == 0 && (c == EOF || c == '\n')) || (f == 3 && c == ' ' && ((c = getc(input) >= '0') && c <= '9')) || (f == 2 && c == '\n' && ((c = getc(input) >= '0') && c <= '9')) ) 
-            programBreaker(4);
 
-        // This have been added seperately to check first other symbol or not
+        // If the input was only space, new line or EOF that's mean the structure is invalid
+        else if((counter == 0 && c == ' ') 
+            || (counter == 0 && c == '\n') 
+            || (counter == 0 && c == EOF))
+            programBreaker(7);              //Structure of the input is invalid
+        
+        // Matrix size validations
+        else if((f == 3 && c == EOF)                                            //Input: number + EOF -> But It should (number + '\n')
+            || ((f == 0|| f == 4) && (c == EOF || c == '\n'))                   //Input: number + EOF or \n -> But It should (number + ' ')
+            || (f == 3 && c == ' ' && ((c = getc(input) >= '0') && c <= '9'))   //Input: number + ' ' + number-> But It should (number + '\n')
+            || (f == 2 && c == '\n' && ((c = getc(input) >= '0') && c <= '9'))) //Input: number + '\n'+ number-> But It should (number + EOF)
+            programBreaker(4);                                                  //Matrix size does not suit to the number of cities
+
+
+        //If it passed from other validations and still other symbol
         else if(!(c >= '0' && c <= '9'))
-            programBreaker(7);
-        
-        if(insignificantZeroFlag == 1)
-            programBreaker(7);
-        tmp = 10*tmp + (c - '0');
-        flagNumbers = 1;
-        counter++;
-    }
-    if(negativeValueFlag == 1)
-        programBreaker(5);
+            programBreaker(7);              //Structure of the input is invalid
 
-    //To solve the invalid input e.g. 1*
-    if(flagNumbers == 1 && flagStar == 1)
-        programBreaker(7);  
+        
+        //If the flag of Insignificant zero is raised and there is another valid input after it not equal to 0
+        if(insignificantZeroFlag == 1 && c != '0')
+            programBreaker(7);              //Structure of the input is invalid
+
+        tmp = 10*tmp + (c - '0');           //Add the integer input to the currecnt tmp variable
+        numbersFlag = 1;                    //raise the flag of integer input
+        counter++;                          //Increment the number of character that we read successfully
+    }
+    
+    //To solve the invalid input (number followed by star) e.g. 1*
+    if(numbersFlag == 1 && starFlag == 1)
+        programBreaker(7);              //Structure of the input is invalid
+    
+    //To solve the invalid input (- followed by star) e.g. -*, *-
+    if(starFlag == 1 && negativeValueFlag == 1)
+        programBreaker(7);              //Structure of the input is invalid
+    
+    // To returun the max Cost +1 (Unreachable cities)
+    if(starFlag == 1)
+        return MAXCityCost+1;
+    
+
+    // To evaluate the negative numbers
+    if(negativeValueFlag == 1)
+        tmp *= -1;
+
+    //Check the boundries of the tokens
+    if(f >= 2 && rangeDistantValidation(tmp) == 1)
+        programBreaker(5);              //The distance between some cities is out of range
+
     return tmp;
 }
 
-int rangeDistantValidation(int tmp, int i, int j) {
-    if(tmp != -25 && ((!(tmp >= 1 && tmp <= 20) && i != j) || i == j && tmp != 0))
+
+/*
+ * Function:  countAllPaths 
+ * --------------------
+ * Count the number of possible shortest path to city c
+ * c: the pointer to the destination city
+ * returns: the number of shortest path
+ */
+int countAllPaths(City *c) {
+    int tmp = 0;    //Store the number of shortest paths
+    // If the function reaches to the greatest parent the initialCity it will return path
+    if(c->numberBestCostsCities == 0) 
         return 1;
-    return 0;
+
+    //iterate over the possible shortest paths from the current city    
+    for(int x = 0; x < c->numberBestCostsCities; x++) 
+        tmp += countAllPaths(c->prev[x]);
+    
+    return tmp;
 }
 
 
-void countAllPaths(City *c) {
-    if(c->numberBestCostsCities == 0) {
-        shortestPathsCounter++;
-        return;
-    }
-    for(int x = 0; x < c->numberBestCostsCities; x++) {
-        countAllPaths(c->prev[x]);
-    }
 
-}
+//Global variables related to the printAllPaths function
+int shortestPathNumber = 0;     //To Store the current number of path we are printing it
+int printNewLineFlag = 0;       //Flag to print a end line for the possible shortes paths after the first one
+int printDestination = 0;       //Flag to ensure that we print the destination city in the end of each solution
 
-int shortestPathNumber = 0;
-int printNewLineFlag = 0;
+/*
+ * Function:  printAllPaths 
+ * --------------------
+ * Print all the shortest path in the specific format
+ * c: the pointer to the destination City 
+ */
 void printAllPaths(City *c) {
+    // If the function reaches to the greatest parent the initialCity it will return path
     if(c->numberBestCostsCities == 0) {
-        shortestPathNumber++;
+        shortestPathNumber++;           //Increment the number of shortest paths we have
+        //If we are printed already a solution before, print an end line
         if(printNewLineFlag == 1) {
+
+            //ensure that we have print the destination city
+            if(printDestination == 0)
+                fprintf(output," -> %d",destinationCity);
+
             fprintf(output,"\n");
+            printDestination = 0;
         }
-        printNewLineFlag = 1;
-        fprintf(output,"%d. %d",shortestPathNumber,c->index);
+        printNewLineFlag = 1;       //Set the flag in order to print end line after the first solution beign printed
+        fprintf(output,"%d. %d",shortestPathNumber,c->index);   //Print the initialCity
         return;
     }
+    // Iterate over the possible solutions for the shortest paths from the current city
     for(int x = 0; x < c->numberBestCostsCities; x++) {
-        printAllPaths(c->prev[x]);
-        fprintf(output," -> %d",c->index);
+        printAllPaths(c->prev[x]);          //Recursive call to explore the shortest path for the prev city
+        fprintf(output," -> %d",c->index);  //Print the current city index
+        if(c->index == destinationCity)
+            printDestination = 1;
     }
 
 }
-
-
 
 
 int main() {
 
+    //Set the names of the files and the modes for them
     input = fopen("input.txt","r");
-    output = fopen("HanyHamedOutput.txt","w+"); //In order to redit in the file
-    
-    char c;
-    int numberCities = 0;
-    int initialCity = 0;
-    int destinationCity = 0;
-    int counter = 0;
-    
+    output = fopen("HanyHamedOutput.txt","w");
 
+    int numberCities = 0;       //variable to store the number of the cities 
 
+    //Check if the input file's name is correct
     if(input == NULL) 
         return 1;
 
-
+    //Read the number of cities and check the boundries
     numberCities = getToken(0);
-    if(!(numberCities >= 5 && numberCities <= 50)) 
-        programBreaker(1);
+    if(!(numberCities >= MINNumberCities && numberCities <= MAXCityCost)) 
+        programBreaker(1);  //Number of cities is out of range
 
+
+    //Read the Initial City and check the boundries
     initialCity = getToken(0);
     if(!(initialCity >= 0 && initialCity <= numberCities-1)) 
-        programBreaker(2);
+        programBreaker(2);  //Chosen initial city does not exist
 
+
+    //Read the Destination City and check the boundries
     destinationCity = getToken(1);
     if(!(destinationCity >= 0 && destinationCity <= numberCities-1)) 
-        programBreaker(2);
-    
-    c = fgetc(input);
+        programBreaker(3);  //Chosen destination city does not exist
+
+    //Read the empty line
+    char c = fgetc(input);
+    //If it not an empty line
     if(c != '\n')
-        programBreaker(7);
-    
-    int i,j,tmp;
-    int adjMatrix[numberCities][numberCities];
+        programBreaker(7);  //Structure of the input is invalid
+
+
+    int tmp;                                    //temporary variable to store the token 
+    int adjMatrix[numberCities][numberCities];  //Adjecency matrix to represent the graph
 
     for(i = 0; i < numberCities; i++) {
         for(j = 0 ; j < numberCities-1; j++) {
 
-            tmp = getToken(0);
-            if(rangeDistantValidation(tmp,i,j) == 1)
-                programBreaker(5);
+            tmp = getToken(4);  //Read cost + space
+
+            //Check if the cost from the city to itself not equal to zero as it can be *
             if(i == j && tmp != 0)
-                programBreaker(7);
+                programBreaker(7);      //Structure of the input is invalid
             
-            adjMatrix[i][j] = tmp;
+            adjMatrix[i][j] = tmp;      //Store the value after validations
 
         }
-        if(i == numberCities -1)
+        //If it is the last element in the last row, break to read it with validation of EOF
+        if(i == numberCities - 1)
             break;
 
-        tmp = getToken(3);
-        if(rangeDistantValidation(tmp,i,j) == 1)
-            programBreaker(5);
+        tmp = getToken(3);  //Read cost + '\n'
         adjMatrix[i][j] = tmp; 
     }
-    tmp = getToken(2);
-    if(rangeDistantValidation(tmp,i,j) == 1)
-        programBreaker(5);
-    adjMatrix[i][j] = tmp; 
+    tmp = getToken(2);      //Read cost + EOF
+    //Check if the cost from the city to itself not equal to zero
     if(i == j && tmp != 0)
         programBreaker(7);
+    adjMatrix[i][j] = tmp; 
 
-    if(adjMatrix[destinationCity][initialCity] == -25)
-        programBreaker(6);
-
-
-    //Dijkstra
-    //Check if the structure values of the vars initialized with zeros
-    City cities[numberCities];
-    cities[initialCity].cost = 0;
-    cities[initialCity].prev[0] = NULL;
+    //Dijkstra Algorithm
+    City cities[numberCities];          //List to store the cities cost and visting status from the Algorithm
+    cities[initialCity].cost = 0;       //Initialize the initial city cost
     
-    for(int i = 0; i < numberCities; i++) {
+    for(i = 0; i < numberCities; i++) {
+        //If it is not the initial city put the maximum cost for the longest path that can be
         if(i != initialCity)
-            cities[i].cost = 21;    //more than the max cost
+            cities[i].cost = (MAXCityCost+1)*numberCities;
         
+        //Initialize the array
         cities[i].numberBestCostsCities = 0;
         cities[i].index = i;
         cities[i].visited = 0;
-
+        cities[i].prev[0] = NULL;
     }
 
-    for(int i = 0; i < numberCities; i++) {
-        City *mnCity;
-        int mnCost = 20*numberCities;
-        int mnIndexCity = 0;
-        //Choose the min cost that for first cycle it will be initial city
+    //Iterate over the list of cities
+    for(i = 0; i < numberCities; i++) {
+
+        int mnCost = 21*numberCities;   //Store the value of the value of the minimum cost, in oredr to choose the minimum one
+        int mnIndexCity = 0;            //Store the index of the minimum city (needed) index
+
+        //Choose the city that has the minimum cost and is not visited yet
         for(int x = 0; x <numberCities; x++) {
             if(mnCost >= cities[x].cost && cities[x].visited == 0) {
-                mnCity = &(cities[x]);
                 mnIndexCity = x;
                 mnCost = cities[x].cost;
             }
-            
         }
 
-        for(int j = 0; j < numberCities; j++) {
-            //If it is connected to it or not
-            if(j != mnIndexCity && adjMatrix[j][mnIndexCity] != -25 && cities[j].visited == 0) {
-                int tmp = (mnCity->cost)+adjMatrix[j][mnIndexCity] ;
-                if(tmp < cities[j].cost){
-                    cities[j].cost = tmp;
-                    if(cities[j].numberBestCostsCities > 0) {
-                        for(int x = 0; x < cities[j].numberBestCostsCities; x++) {
-                            cities[j].prev[x] = NULL;
-                        }
-                    }
-                    cities[j].numberBestCostsCities = 1;
-                    cities[j].prev[0] = mnCity;   
-                }
-                else if(tmp == cities[j].cost) {
-                    cities[j].prev[cities[j].numberBestCostsCities] = mnCity;
-                    cities[j].numberBestCostsCities++;
-                }
+        for(j = 0; j < numberCities; j++) {
+            //Check if the jth city is connected to the minimum city or not and if it is reachable from it and not visited
+            if(j != mnIndexCity && adjMatrix[j][mnIndexCity] <= MAXCityCost && cities[j].visited == 0) {
+                int tmp = cities[mnIndexCity].cost + adjMatrix[j][mnIndexCity];     //Add the cost of the edge and the cost of the source city
                 
+                //If the tmp value is better, this will be the shortest path for the jth city
+                if(tmp < cities[j].cost){
+                    cities[j].cost = tmp;   //Set the new updated cost
+                    
+                    //Erase the old list of shortest paths from other nodes
+                    if(cities[j].numberBestCostsCities > 0)
+                        for(int x = 0; x < cities[j].numberBestCostsCities; x++)
+                            cities[j].prev[x] = NULL;       //Make the pointer point to NULL (nothing)
+
+                    cities[j].numberBestCostsCities = 1;
+                    cities[j].prev[0] = &cities[mnIndexCity];   //Put the previouse city as the best parent for this city now   
+                }
+                //If we have equal path, add it to the list
+                else if(tmp == cities[j].cost) {
+                    cities[j].prev[cities[j].numberBestCostsCities] = &cities[mnIndexCity];
+                    cities[j].numberBestCostsCities++;
+                }   
             }
         }
-        mnCity->visited = 1;
+        cities[mnIndexCity].visited = 1;    //Mark the city as visited
     }
 
-    countAllPaths(&cities[destinationCity]);
+    // If the destination city is not reachable
+    if(cities[destinationCity].cost == (MAXCityCost+1)*numberCities)
+        programBreaker(6);  //Initial and destination cities are not connected
 
-    fprintf(output,"The shortest path is %d\nThe number of shortest paths is %d:\n",cities[destinationCity].cost,shortestPathsCounter);
-    printAllPaths(&cities[destinationCity]);
+    int shortestPathsCounter = countAllPaths(&cities[destinationCity]);     //Get the number of shortest paths
+
+    fprintf(output,"The shortest path is %d.\nThe number of shortest paths is %d:\n",cities[destinationCity].cost,shortestPathsCounter);
     
+    //If the initialCity is the same as destination city, only output the city, otherwise printAllPaths
+    if(initialCity == destinationCity)
+        fprintf(output,"1. %d -> %d",initialCity,initialCity);
+
+    else
+        printAllPaths(&cities[destinationCity]);
+
+    // fprintf(output,"\n");
     fclose(input);
     fclose(output);
 

@@ -1,0 +1,1 @@
+Chosen initial city does not exist
