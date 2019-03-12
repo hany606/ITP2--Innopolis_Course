@@ -1,1 +1,1 @@
-Chosen destination city does not exist
+The distance between some cities is out of range

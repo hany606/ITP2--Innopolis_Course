@@ -1,1 +1,1 @@
-The number of cities is out of range
+Number of cities is out of range

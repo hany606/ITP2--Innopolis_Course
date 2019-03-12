@@ -1,5 +1,5 @@
 #!/bin/bash
-for i in {1..36}; do
+for i in {1..41}; do
 	cp $i input.txt
 	../a.exe
 	var=$(diff -w HanyHamedOutput.txt $i.clue)

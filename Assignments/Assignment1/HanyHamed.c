@@ -205,39 +205,32 @@ int countAllPaths(City *c) {
 
 //Global variables related to the printAllPaths function
 int shortestPathNumber = 0;     //To Store the current number of path we are printing it
-int printNewLineFlag = 0;       //Flag to print a end line for the possible shortes paths after the first one
-int printDestination = 0;       //Flag to ensure that we print the destination city in the end of each solution
-
+int pathIndex = 0;              //Will store the index that the recursive function is exploring its parents
 /*
  * Function:  printAllPaths 
  * --------------------
  * Print all the shortest path in the specific format
- * c: the pointer to the destination City 
+ * c: the pointer to the destination City
+ * path: is array that will store the current path to print 
  */
-void printAllPaths(City *c) {
+void printAllPaths(City *c,int *path) {
     // If the function reaches to the greatest parent the initialCity it will return path
     if(c->numberBestCostsCities == 0) {
         shortestPathNumber++;           //Increment the number of shortest paths we have
-        //If we are printed already a solution before, print an end line
-        if(printNewLineFlag == 1) {
-
-            //ensure that we have print the destination city
-            if(printDestination == 0)
-                fprintf(output," -> %d",destinationCity);
-
-            fprintf(output,"\n");
-            printDestination = 0;
-        }
-        printNewLineFlag = 1;       //Set the flag in order to print end line after the first solution beign printed
         fprintf(output,"%d. %d",shortestPathNumber,c->index);   //Print the initialCity
+        // Print the path in the opposite way from the storing
+        for(int i = pathIndex-1; i >= 0; i--)
+            fprintf(output," -> %d",path[i]);  //Print the city index
+        
+        fprintf(output,"\n");
         return;
     }
     // Iterate over the possible solutions for the shortest paths from the current city
     for(int x = 0; x < c->numberBestCostsCities; x++) {
-        printAllPaths(c->prev[x]);          //Recursive call to explore the shortest path for the prev city
-        fprintf(output," -> %d",c->index);  //Print the current city index
-        if(c->index == destinationCity)
-            printDestination = 1;
+        path[pathIndex] = c->index;             //Store the node in the path
+        pathIndex++;
+        printAllPaths(c->prev[x],path);          //Recursive call to explore the shortest path for the prev city
+        pathIndex--;
     }
 
 }
@@ -249,7 +242,7 @@ int main() {
     input = fopen("input.txt","r");
     output = fopen("HanyHamedOutput.txt","w");
 
-    int numberCities = 0;       //variable to store the number of the cities 
+    int numberCities = 0;   //Variable to store the number of the cities 
 
     //Check if the input file's name is correct
     if(input == NULL) 
@@ -257,7 +250,7 @@ int main() {
 
     //Read the number of cities and check the boundries
     numberCities = getToken(0);
-    if(!(numberCities >= MINNumberCities && numberCities <= MAXCityCost)) 
+    if(!(numberCities >= MINNumberCities && numberCities <= MAXNumberCities)) 
         programBreaker(1);  //Number of cities is out of range
 
 
@@ -337,6 +330,8 @@ int main() {
             }
         }
 
+
+
         for(j = 0; j < numberCities; j++) {
             //Check if the jth city is connected to the minimum city or not and if it is reachable from it and not visited
             if(j != mnIndexCity && adjMatrix[j][mnIndexCity] <= MAXCityCost && cities[j].visited == 0) {
@@ -362,7 +357,14 @@ int main() {
             }
         }
         cities[mnIndexCity].visited = 1;    //Mark the city as visited
+
+
     }
+    //Array that will store the path
+    int path[numberCities];
+    //Initialize the path by -1 which mean that the value is not representing an index for a city
+    for(int i = 0; i < numberCities; i++)
+        path[i] = -1;
 
     // If the destination city is not reachable
     if(cities[destinationCity].cost == (MAXCityCost+1)*numberCities)
@@ -377,9 +379,8 @@ int main() {
         fprintf(output,"1. %d -> %d",initialCity,initialCity);
 
     else
-        printAllPaths(&cities[destinationCity]);
+        printAllPaths(&cities[destinationCity],path);
 
-    // fprintf(output,"\n");
     fclose(input);
     fclose(output);
 
