@@ -1,1 +1,1 @@
-Structure of the input is invalid
+Chosen initial city does not exist
