@@ -383,7 +383,7 @@ int main() {
 
     fclose(input);
     fclose(output);
-
+    
 
     return 0;
 }
