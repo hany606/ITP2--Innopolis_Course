@@ -205,7 +205,7 @@ int countAllPaths(City *c) {
 
 //Global variables related to the printAllPaths function
 int shortestPathNumber = 0;     //To Store the current number of path we are printing it
-int pathIndex = 0;              //Will store the index that the recursive function is exploring its parents
+int pathIndex = 0;              //Will store the available index in the array of path to put the city index
 /*
  * Function:  printAllPaths 
  * --------------------
