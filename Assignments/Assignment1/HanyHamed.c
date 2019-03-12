@@ -374,12 +374,7 @@ int main() {
 
     fprintf(output,"The shortest path is %d.\nThe number of shortest paths is %d:\n",cities[destinationCity].cost,shortestPathsCounter);
     
-    //If the initialCity is the same as destination city, only output the city, otherwise printAllPaths
-    if(initialCity == destinationCity)
-        fprintf(output,"1. %d -> %d",initialCity,initialCity);
-
-    else
-        printAllPaths(&cities[destinationCity],path);
+    printAllPaths(&cities[destinationCity],path);
 
     fclose(input);
     fclose(output);
