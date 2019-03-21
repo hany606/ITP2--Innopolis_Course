@@ -1,3 +1,5 @@
+//Build it in two header file and see if I include the file twice of linked list
+
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -9,7 +11,7 @@
 struct Cell
 {
     char* str;
-    int nbr;
+    int nbr;    //number of occurrences
     struct Cell *next;
 };
 
@@ -26,13 +28,24 @@ struct Cell stringToCell(char *s) {
     return c;
 }
 
+List createRoot(){
+    List r = malloc(sizeof(struct Cell));
+    r->next = NULL;
+    r->str  = "Root";
+    return r; 
+}
 
 
 //• Write a function that takes as arguments a cell and a list and adds a new cell at the head of the list.
-void addFirst(struct Cell *c, List l) {
-    List tmp = l->next;
-    l->next = c;
-    c->next = tmp;
+void addFirst(struct Cell c, List l) {
+    struct Cell *tmp = malloc(sizeof(struct Cell));
+    tmp->str = c.str;
+    tmp->next = l->next;
+    
+    //Weired behaviour
+    // List tmp = l->next;
+    // l->next = c;
+    // c->next = tmp;
 }
 
 // • Write a function that looks up a string in a list and returns
@@ -61,18 +74,28 @@ void traverse(List l) {
     
 }
 
+
+struct HashTable
+{
+    int mod;
+    List* table;
+};
+
 int main() {
 
+    //If you are gonna not to use malloc and create the cells in the stack, you will need to create every time you add in the list, you will need to create a new cell with a new name and this is really bad.
     //Root node
-    List root;
-    struct Cell c = stringToCell("Root");
-    printf("%s\n",c.str);
-    addFirst(&c, root);
+    List root = malloc(sizeof(struct Cell));        //Create the root node
+    addFirst(stringToCell("1st"),root);
+
+    // struct Cell c = stringToCell("1st");
+    // printf("%s\n",c.str);
+    // addFirst(c, root);
     // printf("%s",c.str);
-    //Traverse the List
-    printf("\nTraverse the List\n");
+    // //Traverse the List
+    // printf("\nTraverse the List\n");
     traverse(root);
-    printf("\n-----------\n");
+    // printf("\n-----------\n");
 
     // • Write a program that reads the standard input and build the
     // list of the different lines with, for each cell, the number of
