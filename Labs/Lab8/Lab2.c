@@ -19,7 +19,6 @@ typedef struct Cell* List;
 
 
 
-//Using malloc ?? to create a cell in the heap and just return the pointer to it 
 //• Write a function that takes as an argument a string and returns a cell that contains this string.
 struct Cell stringToCell(char *s) {
     struct Cell c;
@@ -41,38 +40,39 @@ void addFirst(struct Cell c, List l) {
     struct Cell *tmp = malloc(sizeof(struct Cell));
     tmp->str = c.str;
     tmp->next = l->next;
-    
-    //Weired behaviour
-    // List tmp = l->next;
-    // l->next = c;
-    // c->next = tmp;
+    l->next = tmp;
 }
 
 // • Write a function that looks up a string in a list and returns
-// a pointer to the first cell that contains this string (or a null
-// pointer if the list does not contain it).
 List findString(List l, char *s) {
-    struct Cell tmp;
-    List ptr = l;
-    while(tmp.next != NULL) {
-        if(strcmp(tmp.str, s) == 0)
-            return ptr;
-        tmp = *(tmp.next);
-    }
+    if(l == NULL)
+        return NULL;
+    List tmp = l;
+    do{
+        if(strcmp(tmp->str, s) == 0)
+            return tmp;
+        tmp = tmp->next;
+    }while(tmp != NULL);
     return NULL;
 }
 
-void traverse(List l) {
-    List ptr = l;
-    struct Cell tmp = *l;
-    //Check the first one, Check the last one, if the list is empty???
-    while(tmp.next != NULL) {
-        printf("%s", tmp.str);
-        tmp = *(tmp.next);
+void printCell(struct Cell* c) {
+    printf("%s",c->str);
+}
 
-    }
+void traverse(List l) {
+    if(l == NULL)
+        return;
+    List tmp = l;
+    printf("\n");
+    do{
+        printf("%s\t", tmp->str);
+        tmp = tmp->next;
+    }while(tmp != NULL);
+    printf("\n");
     
 }
+
 
 
 struct HashTable
@@ -85,17 +85,13 @@ int main() {
 
     //If you are gonna not to use malloc and create the cells in the stack, you will need to create every time you add in the list, you will need to create a new cell with a new name and this is really bad.
     //Root node
-    List root = malloc(sizeof(struct Cell));        //Create the root node
+    List root = createRoot();        //Create the root node
     addFirst(stringToCell("1st"),root);
-
-    // struct Cell c = stringToCell("1st");
-    // printf("%s\n",c.str);
-    // addFirst(c, root);
-    // printf("%s",c.str);
-    // //Traverse the List
-    // printf("\nTraverse the List\n");
     traverse(root);
-    // printf("\n-----------\n");
+    printCell(findString(root,"1st"));
+    printf("\n");
+
+    printf("\n-----------\n");
 
     // • Write a program that reads the standard input and build the
     // list of the different lines with, for each cell, the number of
@@ -113,3 +109,4 @@ int main() {
     // name of file, then the program reads the standard input.
 
 }
+
