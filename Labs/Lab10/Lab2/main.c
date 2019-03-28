@@ -30,25 +30,25 @@ void bublesort(int *a){
 }
 
 
-void swapGeneric(void *a, void *b){
-    int tmp = *a;
-    *a = *b;
-    *b = tmp;
-}
+// void swapGeneric(void *a, void *b){
+//     int tmp = (int)*a;
+//     *a = *b;
+//     *b = tmp;
+// }
 
 int cmp(void* a, void* b){
-    int ai = (int) *a;
-    int bi = (int) *b;
-    if(ai > bi)
+    int* ap = (int*) a;
+    int* bp = (int*) b;
+    if(*ap > *bp)
         return 1;
     return 0;
 }
 
-void bublesortGeneric(void *a){
+void bublesortGeneric(void *a, int (*cmp)(void *, void *)){
     for(int i = 0; i < BUFFSIZE; i++){
         for(int x = i; x < BUFFSIZE; x++){
-            if(cmp((a+i),(a+x)))
-                swapGeneric((a+i),(a+x));
+            // if(cmp((a+i),(a+x)))
+                // swapGeneric((a+i),(a+x));
         }
     }
 }
