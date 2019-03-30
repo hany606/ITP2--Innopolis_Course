@@ -75,11 +75,20 @@ void traverse(List l) {
 
 
 
-struct HashTable
+typedef struct
 {
     int mod;
     List* table;
-};
+}HashTable;
+
+int hashfunction(char s[]){
+    int key = 0;
+    for(int i = 0; i < BUFFERSIZE; i++) 
+        key += (int) (s[i]-'0');
+    
+}
+
+
 
 int main() {
 
@@ -92,6 +101,25 @@ int main() {
     printf("\n");
 
     printf("\n-----------\n");
+
+
+    //HashTable
+    // HashTable 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // • Write a program that reads the standard input and build the
     // list of the different lines with, for each cell, the number of
