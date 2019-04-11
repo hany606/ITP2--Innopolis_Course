@@ -18,5 +18,9 @@ typedef struct speed
 
 
 int start(Speed);
+int getMaxSpeed();
+int isAuthorizedSpeed(Speed s);
+
+
 
 #endif

@@ -23,25 +23,22 @@ void *thread_func2(void *vararg){
     g++; g++;
     s++; s++;
     printf("S = %d, G = %d, L = %d\n", s,g,l);
+    while(1){}
 }
 
 int main(){
-    pthread_t id1;
-    pthread_t id2;
-    pthread_t id3;
-    pthread_t id4;
-
-    pthread_create(&id1, NULL, thread_func2, NULL);
-    pthread_create(&id2, NULL, thread_func2, NULL);
-    pthread_create(&id3, NULL, thread_func2, NULL);
-    pthread_create(&id4, NULL, thread_func2, NULL);
-
+    const int  n =10000;
+    pthread_t id[n];
+    int i = 0;
+    for(i = 0; i < n; i++){
+        pthread_create(&id[i], NULL, thread_func2, NULL);
+    }
     printf("Main G = %d\n", g);
 
-    pthread_join(id1, NULL);
-    pthread_join(id2, NULL);
-    pthread_join(id3, NULL);
-    pthread_join(id4, NULL);
+    for(i= 0; i < n; i++){
+        pthread_join(id[i], NULL);
+    }
+
 
     return 0;
 }

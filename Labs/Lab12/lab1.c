@@ -51,8 +51,30 @@ void printBinary(int n){
 
 }
 
+char SBox_helper(char v){
+    char look_up_table[] = {0xE,0x4,0xD,0x1,0x2,0xF,0xB,0x8,0x3,0xA,0x6,0xC,0x5,0x9,0x0,0x7};
+    return look_up_table[v];
+}
+
+short int SBox(short int v){
+    char res[4];
+    short int tmp;
+
+    for(int i = 0; i < 4; i++){
+        tmp = v>>(i*4);
+        tmp <<= 12;
+        tmp >>= 12;
+        res[i] = tmp;
+        short int tmp2 = SBox_helper(res[i]);
+        tmp2 &= __INT16_MAX__;
+        tmp2 <<= (i*4);
+        v &= tmp2;
+    }    
+}
+
 
 int main(){
+    // printf("%d",sizeof(short int));//2 Byte = 16 bit
     int val = 0b00111010100101001101011000111111;
     printBinary(Sub_Key_Get(val,1));
     //problem in printing
