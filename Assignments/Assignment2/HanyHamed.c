@@ -1,5 +1,8 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<limits.h>
+#include<string.h>
+
 
 #define inputFileNamePrefix "input"
 #define outputFileNamePrefix "HanyHamedOutput"
@@ -11,15 +14,6 @@
 //     NewLine,
 //     EndOfFile
 // }globalReadTokenFlag;
-
-typedef struct courseStruct
-{
-    int runFlag:1;
-    char *name;
-    int numLabs;
-    int numStudents;
-
-} Course;
 
 typedef struct professorStruct
 {
@@ -39,6 +33,7 @@ typedef struct TAStruct
     char **courses;
 } TA;
 
+
 typedef struct studentStruct
 {
     int numRequiredCourses;
@@ -48,6 +43,36 @@ typedef struct studentStruct
     char *id;
     char **courses;
 } Student;
+
+typedef struct courseStruct
+{
+    int runFlag:1;
+    char *name;
+    int numLabs;
+    int numStudents;
+    Professor professor;
+    TA* TAs;
+    Student* students;
+} Course;
+
+typedef struct badnessStruct
+{
+    int type;
+    Professor professor;
+    TA ta;
+    Student student;
+}Badness;
+
+
+typedef struct scheduleStruct
+{
+    int numCourses;
+    int numBadness;
+    Course *courses;
+    Badness *badness;
+    unsigned long long int totalPoints;
+}Schedule;
+
 
 
 
@@ -199,7 +224,7 @@ int main(){
 
             while(1){
                 *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
-                state = readToken(courses[0],MAXBUFFER,inputFileptr);
+                state = readToken(courses[numCourses],MAXBUFFER,inputFileptr);
 
                 if(state == 2)
                     break;
@@ -208,7 +233,10 @@ int main(){
         
             }
             printf("\n");
-            setProfessor((professorsList+numProf),professorFirstName, professorLastName,courses,numCourses);
+            // for(int j = 0 ; j < numCourses+1; j++){
+            //     printf("Course: %s\n",courses[j]);
+            // }
+            setProfessor((professorsList+numProf),professorFirstName, professorLastName,courses,numCourses+1);
             professorsList = (Professor*) realloc(professorsList, ((++numProf)+1)*sizeof(Professor));
 
             // free(courses);        
@@ -246,7 +274,7 @@ int main(){
             }
             
             printf("\n");
-            setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses);
+            setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses+1);
             TAsList = (TA*) realloc(TAsList, ((++numTA)+1)*sizeof(TA));
             // free(courses); 
 
@@ -283,7 +311,7 @@ int main(){
                 courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
             }
             printf("\n");
-            setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses);
+            setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses+1);
             studentsList = (Student*) realloc(studentsList, ((++numStudents)+1)*sizeof(Student));
 
             if(state == 3){
@@ -296,21 +324,110 @@ int main(){
         }
         printf("\n##### End Reading Students #####\n");
 
-        //Print lists in order to ensure that they are correct
-        for(int x = 0 ; x < numCourses; x++){
-            printf("%s\n",(coursesList+x)->name);
+        // //Print lists in order to ensure that they are correct
+        // for(int x = 0 ; x < numCourses; x++){
+        //     printf("%s\n",(coursesList+x)->name);
+        // }
+
+        // for(int x = 0 ; x < numProf; x++){
+        //     printf("^^^%s\n", (professorsList+x)->firstName);
+        //     for(int j = 0; j < (professorsList+x)->numTrainedCourses; j++){
+        //       printf("%s\n",(professorsList+x)->courses[j]);
+
+        //     }
+        // }
+        // for(int x = 0 ; x < numTA; x++){
+        //     printf("%s\n",(TAsList+x)->firstName);
+        // }
+
+        // for(int x = 0 ; x < numStudents; x++){
+        //     printf("%s\n",(studentsList+x)->firstName);
+        // }
+        
+        printf("\n##### Start Logic #####\n");
+
+        unsigned long long int mnTotalPoints = ULLONG_MAX;
+        Schedule bestSchedule;
+
+        for(unsigned long long int comb = 0; comb < numCourses*numProf*numTA*numStudents; comb++){
+            Schedule schedule;
+            schedule.courses = (Course*) calloc(schedule.numCourses +1, sizeof(Course));
+            schedule.badness = (Badness*) calloc(schedule.numBadness, sizeof(Badness));
+
+            for(int c = 0; c < numCourses; c++){
+
+                Course *course = (coursesList+c);
+                printf("\nCourse: %s\n",course->name);
+
+
+                for(int p = 0; p < numProf; p++){
+                    Professor *professor = (professorsList+p);
+                    printf("\nProf: %s\n",professor->firstName);
+
+                    int flagProfessor = 0;
+                    // printf("\nprof name: %s\n",professor->firstName);
+
+                    for(int j = 0; j < professor->numTrainedCourses; j++){
+                        // printf("\ncmp %s:%s\n",professor->courses[j], course->name);
+                        if(strcmp(professor->courses[j],course->name) == 0){
+                            flagProfessor = 1;
+                            break;
+                        }
+                    }
+                    int flagTA = 0;
+                    if(flagProfessor == 1){
+                        printf("There is a professor\n");
+                        int taLabs = 0;
+                        for(int t = 0; t < numTA; t++){
+                            TA *ta = (TAsList+t);
+                            for(int j = 0; j < ta->numTrainedCourses; j++){
+                                if(strcmp(ta->courses[j],course->name) == 0){
+                                    taLabs += 4;
+                                    break;
+                                }
+                            }
+                            if(course->numLabs <= taLabs){
+                                flagTA = 1;
+                                break;
+                            }
+                        }
+                        //Here the course is running
+                        if(flagTA == 1){
+                            printf("There is atleast a TA\n");
+
+                            for(int s = 0; s < numStudents; s++){
+                                Student *student = (studentsList+s);
+                                int tmpnum = schedule.numCourses;
+                                Course *tmpc = ((schedule.courses)+tmpnum);
+                                *tmpc = *course;
+                                (schedule.courses) = (Course*) realloc((schedule.courses), ((++(schedule.numCourses))+1)*sizeof(Course));
+                                // printf("\n%s\n",course->name);
+                            }
+                        }
+                        else
+                        {
+                            printf("\nNo enough TAs for: %s\n",course->name);
+                            //There is no enough TAs, then there are badness points (can't run the course)
+                        }
+                            
+                        
+                    }
+                    else{
+                        printf("\nNot qualified professor for: %s\n",course->name);
+                        //There is no professor to run the course, there are badness points (can't run the course)
+                    }
+                    
+                    if(flagProfessor == 1 && flagTA == 1)
+                        break;
+                }
+
+            }
+
+            free(schedule.courses);
+            free(schedule.badness);
         }
 
-        for(int x = 0 ; x < numProf; x++){
-            printf("%s\n",(professorsList+x)->firstName);
-        }
-        for(int x = 0 ; x < numTA; x++){
-            printf("%s\n",(TAsList+x)->firstName);
-        }
-
-        for(int x = 0 ; x < numStudents; x++){
-            printf("%s\n",(studentsList+x)->firstName);
-        }
+        printf("\n##### End Logic #####\n");
 
 
         free(coursesList);
