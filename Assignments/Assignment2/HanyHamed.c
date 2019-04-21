@@ -9,11 +9,12 @@
 #define fileExtension ".txt"
 #define MAXBUFFER 50
 
-// enum TokenFlag{
-//     Space,
-//     NewLine,
-//     EndOfFile
-// }globalReadTokenFlag;
+int numCourses = 0;
+int numProf = 0;
+int numTA = 0;
+int numStudents = 0;
+unsigned long long int mnTotalPoints = ULLONG_MAX;
+Schedule bestSchedule;
 
 typedef struct professorStruct
 {
@@ -61,6 +62,8 @@ typedef struct badnessStruct
     Professor professor;
     TA ta;
     Student student;
+    int num;
+    Course course;
 }Badness;
 
 
@@ -135,16 +138,129 @@ void setStudent(Student *sptr, char fName[], char lName[], char id[], char **cou
     sptr->numRequiredCourses = nC;
 }
 
+
+void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points){
+    int badnessPoints = points;
+    //local schedule
+    if(points > mnTotalPoints){
+        return;
+    }
+
+    if(sCoursesList == NULL){
+        //compare with the global minimum and store the minimum
+    }
+    //Check if the course can run or not: Is there enough professors
+    //Select a professor who are able to teach this course
+    //loop over the professors
+    int flagProf = 0;
+    for(int p = 0; p < numProf; p++){
+        int state = 0;
+        Professor *professor = (sProfessorsList+p);
+        //if he has two classes, continue
+        if(professor->numTakenCourses == 2)
+            continue;
+        //Check if he is trained or not
+        int trainedProfessor = 0;
+        for(int j = 0; j < professor->numTrainedCourses; j++){
+            if(strcmp(professor->courses[j],*sCoursesList->name) == 0){    //trained professor
+                trainedProfessor = 1;
+                break;   
+            }
+        }
+        //if he has one class, he will teach this course if he is trained no badness points
+        //if he has zero class, he will teach this course in both ways (trained, untrained) but with different badness points
+            //if trained, no badness points
+            //if untrained, 5 points
+            
+        //if trained professor and can take the class have 0 or 1 courses
+        if(trainedProfessor == 1){
+            professor->numTakenCourses++;
+            flagProf = 1;
+        }
+        
+        //he is not trained
+        else{
+            //He has already a class and he cannot take this class as he is not trained
+            if(professor->numTakenCourses == 1)
+                continue;
+            //He has zero class
+            else{
+                professor->numTakenCourses += 2;
+                badnessPoints += 5;
+                flagProf = 1;
+                //Badness, memo it, increase the size of badness
+            }
+        }
+        if(flagProf == 0)
+            break;
+      
+        //Prof will teach the course (There is no difference in the procedure to teach except the badness poitns)
+        //Select the TAs
+        //loop over TAs
+        //Check if the course can run or not
+        int flagTA = 0;
+        int taLabs = 0;
+        for(int t = 0; t < numTA; t++){
+            TA *ta = (sTAsList+t);
+            if(ta->numTakenCourses == 4){
+                continue;
+            }
+            for(int j = 0; j < ta->numTrainedCourses; j++){
+                if(strcmp(ta->courses[j],sCoursesList->name) == 0){
+                    taLabs += 4-(ta->numTakenCourses);
+                    break;
+                }
+            }
+            if(sCoursesList->numLabs <= taLabs){
+                flagTA = 1;
+                break;
+            }
+        }
+        //If available TAs:
+        if(flagTA == 1){
+            //Get combination of allowed TAs
+            for(int nLabs = 0; nLabs < sCoursesList->numLabs; nLabs++){
+                for(int t = 0; t < numTA; t++){
+                    TA *ta = (sTAsList+t);
+                    //get an allowed TA
+                    int allowed = 0;
+                    for(int j = 0; j < ta->numTrainedCourses; j++){
+                        if(strcmp(ta->courses[j],sCoursesList->name) == 0){
+                            allowed = 1;
+                        }
+                    }
+                    if(allowed == 0)
+                        continue;
+                    for(int tt = 1; tt <= (4-ta->numTakenCourses); tt++){
+                        //will take tt from this TA to fill the labs and the rest for other TAs
+                        //we need to choose the other TAs
+                        
+                    }
+                }
+                //Select the students
+                //Get combinination of allowed Students
+                //calc
+                //select other course
+                solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,badnessPoints);
+            }
+            
+        }
+        
+        //If not available TAs, there is no possibility to run the course, whoever the professor
+        else
+            break;
+    }
+
+    //don't forget to clear what you have changed in the professors, TAs, Students
+    //badness points, memo it, increase the size of badness
+    solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,points+20);    //will not run the course
+}
+
 int main(){
 
     for(int i = 1 ; i  <= 50; i++){
         char inputFileName[12];
         char outputFileName[21];
-
-        int numCourses = 0;
-        int numProf = 0;
-        int numTA = 0;
-        int numStudents = 0;
 
         Course *coursesList = (Course*) calloc(numCourses+1, sizeof(Course));
         Professor *professorsList = (Professor*) calloc(numProf+1, sizeof(Professor));
@@ -346,86 +462,74 @@ int main(){
         
         printf("\n##### Start Logic #####\n");
 
-        unsigned long long int mnTotalPoints = ULLONG_MAX;
-        Schedule bestSchedule;
 
-        for(unsigned long long int comb = 0; comb < numCourses*numProf*numTA*numStudents; comb++){
-            Schedule schedule;
-            schedule.courses = (Course*) calloc(schedule.numCourses +1, sizeof(Course));
-            schedule.badness = (Badness*) calloc(schedule.numBadness, sizeof(Badness));
-
-            for(int c = 0; c < numCourses; c++){
-
-                Course *course = (coursesList+c);
-                printf("\nCourse: %s\n",course->name);
+        //Allocate memory for courses and badness
+        // =
+        solve(coursesList, professorsList, TAsList, studentsList, 0);
+        // schedule.courses = (Course*) calloc(schedule.numCourses, sizeof(Course));
+        // schedule.badness = (Badness*) calloc(schedule.numBadness, sizeof(Badness));
 
 
-                for(int p = 0; p < numProf; p++){
-                    Professor *professor = (professorsList+p);
-                    printf("\nProf: %s\n",professor->firstName);
+        // for(int c = 0; c < numCourses; c++){
 
-                    int flagProfessor = 0;
-                    // printf("\nprof name: %s\n",professor->firstName);
+        //     Course *course = (coursesList+c);
+        //     printf("\nCourse: %s\n",course->name);
+        //     int flagProf = 0;
 
-                    for(int j = 0; j < professor->numTrainedCourses; j++){
-                        // printf("\ncmp %s:%s\n",professor->courses[j], course->name);
-                        if(strcmp(professor->courses[j],course->name) == 0){
-                            flagProfessor = 1;
-                            break;
-                        }
-                    }
-                    int flagTA = 0;
-                    if(flagProfessor == 1){
-                        printf("There is a professor\n");
-                        int taLabs = 0;
-                        for(int t = 0; t < numTA; t++){
-                            TA *ta = (TAsList+t);
-                            for(int j = 0; j < ta->numTrainedCourses; j++){
-                                if(strcmp(ta->courses[j],course->name) == 0){
-                                    taLabs += 4;
-                                    break;
-                                }
-                            }
-                            if(course->numLabs <= taLabs){
-                                flagTA = 1;
-                                break;
-                            }
-                        }
-                        //Here the course is running
-                        if(flagTA == 1){
-                            printf("There is atleast a TA\n");
+            
+        //     for(int p = 0; p < numProf; p++){
+        //         Professor *professor = (professorsList+p);
+        //         printf("\nProf: %s\n",professor->firstName);
 
-                            for(int s = 0; s < numStudents; s++){
-                                Student *student = (studentsList+s);
-                                int tmpnum = schedule.numCourses;
-                                Course *tmpc = ((schedule.courses)+tmpnum);
-                                *tmpc = *course;
-                                (schedule.courses) = (Course*) realloc((schedule.courses), ((++(schedule.numCourses))+1)*sizeof(Course));
-                                // printf("\n%s\n",course->name);
-                            }
-                        }
-                        else
-                        {
-                            printf("\nNo enough TAs for: %s\n",course->name);
-                            //There is no enough TAs, then there are badness points (can't run the course)
-                        }
-                            
+        //         if(professor->numTakenCourses < 2){    //Then this professor is valid for the course
+        //             flagProf = 1;
+        //             //two possiblities -> has already one course (give him trained) or zero(two possiblities, give him untrained or give him two trained)
+        //             if(professor->numTakenCourses == 0){
+        //                 //2 possibilities give him 1 untrained or give him two trained
+        //                 professor->numTakenCourses += 2;
+        //                 //get TAs for the course
                         
-                    }
-                    else{
-                        printf("\nNot qualified professor for: %s\n",course->name);
-                        //There is no professor to run the course, there are badness points (can't run the course)
-                    }
-                    
-                    if(flagProfessor == 1 && flagTA == 1)
-                        break;
-                }
 
-            }
 
-            free(schedule.courses);
-            free(schedule.badness);
-        }
+        //                 //get students
+        //                 //Go to other courses
+        //                 //if it is the last
+        //                 //calc
+
+        //                 //clear
+        //                 professor->numTakenCourses -= 2;
+        //             }
+        //             //possiblity to take two trained courses
+        //             int trainedProfessor = 0;
+        //             for(int j = 0; j < professor->numTrainedCourses; j++){
+        //                 if(strcmp(professor->courses[j],course->name) == 0){    //trained professor
+        //                     trainedProfessor = 1;
+        //                     break;   
+        //                 }
+        //             }
+        //             if(trainedProfessor == 1){
+        //                 professor->numTakenCourses++;
+        //                 //get TAs
+        //                 //get Students
+        //                 //Go to other courses
+        //                 //if it is the last
+        //                 //calc
+        //                 //clear
+        //                 professor->numTakenCourses -= 1;
+        //             }
+        //         }
+        //     }
+        //     if(flagProf == 0){
+        //         ///Can't run the course because of there is no available professors
+        //         //badness
+        //         //calculate
+        //         //move on to the next course, to check it
+        //         continue;
+        //     }
+
+        //     free(schedule.courses);
+        //     free(schedule.badness);
+        // }
 
         printf("\n##### End Logic #####\n");
 
