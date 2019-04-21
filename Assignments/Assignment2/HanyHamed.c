@@ -183,7 +183,7 @@ int main(){
             int numCourses = 0;
             char *professorFirstName = (char*) calloc(1, MAXBUFFER);
             char *professorLastName  = (char*) calloc(1, MAXBUFFER);
-            char **courses = (char**) calloc(numCourses+1,sizeof(char*));
+            char **courses = (char**) calloc(1,sizeof(char **));
 
             int state;
 
@@ -198,20 +198,15 @@ int main(){
             printf("\n%d. %s %s", x+1, professorFirstName, professorLastName);
 
             while(1){
-                printf("\n 651516 %s",professorLastName);
-                                break;
+                *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
+                state = readToken(courses[0],MAXBUFFER,inputFileptr);
 
-                state = readToken(*(courses)+numCourses),MAXBUFFER,inputFileptr);
-                //                 printf("\n 651516 %s",professorLastName);
-
-                // //New line
-                // printf(" %s",*(courses+numCourses));
                 if(state == 2)
                     break;
                 
-                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));        
+                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
+        
             }
-            break;
             printf("\n");
             setProfessor((professorsList+numProf),professorFirstName, professorLastName,courses,numCourses);
             professorsList = (Professor*) realloc(professorsList, ((++numProf)+1)*sizeof(Professor));
@@ -220,85 +215,108 @@ int main(){
         }
         printf("\n##### End Reading Professors #####\n");
 
-        // printf("\n##### Start Reading TAs #####\n");
-        // for(int x = 0; ; x++){
+        printf("\n##### Start Reading TAs #####\n");
+        for(int x = 0; ; x++){
             
-        //     int numCourses = 0;
-        //     char *TAFirstName = (char*) calloc(1, MAXBUFFER);
-        //     char *TALastName  = (char*) calloc(1, MAXBUFFER);
-        //     char **courses = (char**) calloc(numCourses+1,sizeof(char*));
+            int numCourses = 0;
+            char *TAFirstName = (char*) calloc(1, MAXBUFFER);
+            char *TALastName  = (char*) calloc(1, MAXBUFFER);
+            char **courses = (char**) calloc(numCourses+1,sizeof(char*));
 
-        //     int state;
+            int state;
 
-        //     state = readToken(TAFirstName,MAXBUFFER,inputFileptr);
-        //     if(TAFirstName[0] == 'S' && TAFirstName[1] == '\0'){
-        //         // free(TAFirstName);
-        //         // free(TALastName);
-        //         break;
-        //     }
-        //     state = readToken(TALastName,MAXBUFFER,inputFileptr);
+            state = readToken(TAFirstName,MAXBUFFER,inputFileptr);
+            if(TAFirstName[0] == 'S' && TAFirstName[1] == '\0'){
+                // free(TAFirstName);
+                // free(TALastName);
+                break;
+            }
+            state = readToken(TALastName,MAXBUFFER,inputFileptr);
 
-        //     printf("\n%d. %s %s", x+1, TAFirstName, TALastName);
+            printf("\n%d. %s %s", x+1, TAFirstName, TALastName);
             
-        //     while(1){
-        //         state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
-        //         //New line
-        //         printf(" %s",*(courses+numCourses));
-        //         if(state == 2)
-        //             break;
-        //         courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
-        //     }
+            while(1){
+                *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
+                state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
+                //New line
+                printf(" %s",*(courses+numCourses));
+                if(state == 2)
+                    break;
+                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
+            }
             
-        //     printf("\n");
-        //     setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses);
-        //     TAsList = (TA*) realloc(TAsList, ((++numTA)+1)*sizeof(TA));
-        //     // free(courses); 
+            printf("\n");
+            setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses);
+            TAsList = (TA*) realloc(TAsList, ((++numTA)+1)*sizeof(TA));
+            // free(courses); 
 
         
-        // }
-        // printf("\n##### End Reading TAs #####\n");
+        }
+        printf("\n##### End Reading TAs #####\n");
 
-        // printf("\n##### Start Reading Students #####\n");
-        // for(int x = 0; ; x++){
+        printf("\n##### Start Reading Students #####\n");
+        for(int x = 0; ; x++){
 
-        //     int numCourses = 0;
-        //     char *studentFirstName = (char*) calloc(1, MAXBUFFER);
-        //     char *studentLastName  = (char*) calloc(1, MAXBUFFER);
-        //     char *studentID        = (char*) calloc(1, MAXBUFFER);
-        //     char **courses = (char**) calloc(numCourses+1,sizeof(char*));
+            int numCourses = 0;
+            char *studentFirstName = (char*) calloc(1, MAXBUFFER);
+            char *studentLastName  = (char*) calloc(1, MAXBUFFER);
+            char *studentID        = (char*) calloc(1, MAXBUFFER);
+            char **courses = (char**) calloc(numCourses+1,sizeof(char*));
 
             
-        //     int state;
+            int state;
 
-        //     state = readToken(studentFirstName,MAXBUFFER,inputFileptr);
-        //     state = readToken(studentLastName,MAXBUFFER,inputFileptr);
-        //     state = readToken(studentID,MAXBUFFER,inputFileptr);
+            state = readToken(studentFirstName,MAXBUFFER,inputFileptr);
+            state = readToken(studentLastName,MAXBUFFER,inputFileptr);
+            state = readToken(studentID,MAXBUFFER,inputFileptr);
 
-        //     printf("\n%d. %s %s %s", x+1, studentFirstName, studentLastName, studentID);
+            printf("\n%d. %s %s %s", x+1, studentFirstName, studentLastName, studentID);
             
-        //     while(1){
-        //         state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
-        //         //New line
-        //         printf(" %s",*(courses+numCourses));
-        //         // free(trainedCourse);
-        //         if(state == 2 || state == 3)
-        //             break;
-        //         courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
-        //     }
-        //     printf("\n");
-        //     setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses);
-        //     studentsList = (Student*) realloc(studentsList, ((++numStudents)+1)*sizeof(Student));
+            while(1){
+                *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
+                state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
+                //New line
+                printf(" %s",*(courses+numCourses));
+                // free(trainedCourse);
+                if(state == 2 || state == 3)
+                    break;
+                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
+            }
+            printf("\n");
+            setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses);
+            studentsList = (Student*) realloc(studentsList, ((++numStudents)+1)*sizeof(Student));
 
-        //     if(state == 3){
-        //         // free(studentFirstName);
-        //         // free(studentLastName);
-        //         // free(studentID);
-        //         break;
-        //     }
+            if(state == 3){
+                // free(studentFirstName);
+                // free(studentLastName);
+                // free(studentID);
+                break;
+            }
         
-        // }
-        // printf("\n##### End Reading Students #####\n");
+        }
+        printf("\n##### End Reading Students #####\n");
 
+        //Print lists in order to ensure that they are correct
+        for(int x = 0 ; x < numCourses; x++){
+            printf("%s\n",(coursesList+x)->name);
+        }
+
+        for(int x = 0 ; x < numProf; x++){
+            printf("%s\n",(professorsList+x)->firstName);
+        }
+        for(int x = 0 ; x < numTA; x++){
+            printf("%s\n",(TAsList+x)->firstName);
+        }
+
+        for(int x = 0 ; x < numStudents; x++){
+            printf("%s\n",(studentsList+x)->firstName);
+        }
+
+
+        free(coursesList);
+        free(professorsList);
+        free(TAsList);
+        free(studentsList);
         fclose(inputFileptr);
         fclose(outputFileptr);
     }
