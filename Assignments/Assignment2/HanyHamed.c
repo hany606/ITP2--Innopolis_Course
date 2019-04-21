@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<limits.h>
 #include<string.h>
+#include<math.h>
 
 
 #define inputFileNamePrefix "input"
@@ -14,7 +15,9 @@ int numProf = 0;
 int numTA = 0;
 int numStudents = 0;
 unsigned long long int mnTotalPoints = ULLONG_MAX;
-Schedule bestSchedule;
+
+#define Min(x,y) (x >= y ? y : x)
+
 
 typedef struct professorStruct
 {
@@ -51,9 +54,9 @@ typedef struct courseStruct
     char *name;
     int numLabs;
     int numStudents;
-    Professor professor;
-    TA* TAs;
-    Student* students;
+    Professor *professor;
+    TA *TAs;
+    Student *students;
 } Course;
 
 typedef struct badnessStruct
@@ -71,12 +74,15 @@ typedef struct scheduleStruct
 {
     int numCourses;
     int numBadness;
-    Course *courses;
+    Course **courses;
     Badness *badness;
     unsigned long long int totalPoints;
 }Schedule;
 
 
+
+Schedule bestSchedule;
+void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule);
 
 
 int readToken(char *token,int maxBuffer,FILE* fptr){
@@ -139,30 +145,127 @@ void setStudent(Student *sptr, char fName[], char lName[], char id[], char **cou
 }
 
 
-void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points){
+void combinationStudents(Student *st, Student *combStudent, int index, int r, int start, int end, Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule){
+    if(index == r){
+        //Get all combinination of allowed Students
+        //select other course
+        // schedule->courses->students = (Student*) calloc(sCoursesList->numStudents,sizeof(Student));
+        sCoursesList->students = (Student*) calloc(sCoursesList->numStudents,sizeof(Student));
+        // printf("\n=ST==\n\t");
+        for(int i = 0; i < r; i++){
+            // schedule->courses->students[i] = combStudent[i];
+            sCoursesList->students[i] = combStudent[i];
+            // printf("%s/",combStudent[i].firstName);
+        }
+        // printf("\n");
+        solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,points,schedule);
+        // free(sCoursesList->TAs);
+        return;
+    }
+    for(int i = start; i <= end && end-i+1 >= r-index; i++){
+        *(combStudent+index) = *(st+i);
+        combinationStudents(st, combStudent, index+1,r, i+1, end, sCoursesList, sProfessorsList, sTAsList, sStudentsList, points,schedule);
+    }
+
+
+}
+
+void combinationTAs(TA *tas, TA *combTA, int index, int r,int start, int end,Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule){
+    if (index == r)  
+    {  
+        // schedule->courses->TAs = (TA*) calloc(r,sizeof(TA));
+        sCoursesList->TAs = (TA*) calloc(r,sizeof(TA));
+
+        //Select the allowed students
+        // printf("\n==TA==\n\t");
+        for(int i = 0; i < r; i++){
+            // schedule->courses->TAs[i] = combTA[i];
+            sCoursesList->TAs[i] = combTA[i];
+            // printf("%s/",combTA[i].firstName);
+        }
+        // printf("\n");
+
+        int numavailableStudents = 0;
+        Student *availableStudents = (Student*) calloc(numStudents, sizeof(Student));
+
+        for(int s = 0; s < numStudents; s++){
+            Student *st = (sStudentsList+s);
+            for(int j = 0; j < st->numRequiredCourses; j++){
+                if(strcmp(st->courses[j],sCoursesList->name) == 0){
+                    *(availableStudents+numavailableStudents++) = *st;
+                    break;
+                }
+            }
+        }
+        //get all combinations of Students
+        Student *local_Students = (Student*) calloc(sCoursesList->numStudents,sizeof(Student));
+        int tmpav = Min(sCoursesList->numStudents,numavailableStudents);
+        combinationStudents(availableStudents,local_Students,0,tmpav,0,numavailableStudents-1,sCoursesList,sProfessorsList,sTAsList,sStudentsList,points,schedule);
+        // free(sCoursesList->TAs);
+        return;
+    }
+    // printf("%d %d %d %d", index, r, start, end);
+    for(int i = start; i <= end && end-i+1 >= r-index; i++){
+        // printf("//\n");
+        *(combTA+index) = *(tas+i);
+        combinationTAs(tas, combTA, index+1,r, i+1, end, sCoursesList, sProfessorsList, sTAsList, sStudentsList, points,schedule);
+    }
+
+
+}
+
+
+void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points,Schedule *schedule){
+    
+    // Course *local_course = (Course*) calloc(numCourses, sizeof(Course));
+    // memcpy(local_course,sCoursesList, sizeof(Course*));
+    // // printf("%d", res);
+    // local_course->name = "asd";
+
     int badnessPoints = points;
     //local schedule
     if(points > mnTotalPoints){
         return;
     }
-
-    if(sCoursesList == NULL){
+    if(sCoursesList->name == NULL){
         //compare with the global minimum and store the minimum
+        //calc
+        printf("#######################################\n");
+        printf("calc -> Leaf\n");
+        for(int i = 0; i < schedule->numCourses; i++){
+            printf("Course: %s \nProf. %s\nTAs:\n",schedule->courses[i]->name, (schedule->courses[i]->professor->firstName));
+            for(int j = 0; j < (schedule->courses[i])->numLabs; j++ )
+            {
+                printf("\t%s",schedule->courses[i]->TAs[j].firstName);
+            }
+            printf("\nStudents:\n");
+            for(int j = 0; j < (schedule->courses[i])->numStudents; j++ )
+            {
+                printf("\t%s",schedule->courses[i]->students[j].firstName);
+            }
+            printf("\n");
+        }
+        
+        printf("#######################################\n");
+        return;
     }
+    // printf("^%s\n",sCoursesList->name);
     //Check if the course can run or not: Is there enough professors
     //Select a professor who are able to teach this course
     //loop over the professors
     int flagProf = 0;
+    Professor *targetProf = (Professor*) calloc(1, sizeof(Professor));
     for(int p = 0; p < numProf; p++){
-        int state = 0;
         Professor *professor = (sProfessorsList+p);
         //if he has two classes, continue
         if(professor->numTakenCourses == 2)
             continue;
         //Check if he is trained or not
         int trainedProfessor = 0;
+        // printf("\t%s\n",professor->firstName);
+
         for(int j = 0; j < professor->numTrainedCourses; j++){
-            if(strcmp(professor->courses[j],*sCoursesList->name) == 0){    //trained professor
+            if(strcmp(professor->courses[j],sCoursesList->name) == 0){    //trained professor
                 trainedProfessor = 1;
                 break;   
             }
@@ -175,6 +278,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
         //if trained professor and can take the class have 0 or 1 courses
         if(trainedProfessor == 1){
             professor->numTakenCourses++;
+            targetProf = professor;
             flagProf = 1;
         }
         
@@ -186,20 +290,39 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
             //He has zero class
             else{
                 professor->numTakenCourses += 2;
+                targetProf = professor;
                 badnessPoints += 5;
-                flagProf = 1;
+                flagProf = 2;
                 //Badness, memo it, increase the size of badness
+                // badnessPoints += 
             }
         }
-        if(flagProf == 0)
-            break;
-      
+        // if(flagProf == 0){
+        //     printf("lidsfiubsiuniokespodiunioadjio\n");
+        //     continue;
+        // }
+        
+        //  break;
+        
+        sCoursesList->professor = targetProf;
+
+        int num = schedule->numCourses;
+        schedule->courses = (Course**) realloc(schedule->courses,(num+1)*sizeof(Course*));
+        ((schedule->courses)[num]) = sCoursesList;
+        schedule->numCourses++;
+        // schedule->courses[schedule->numCourses-1]->name = "65";
+        // printf("%s:%s\n",schedule->courses[schedule->numCourses-1]->name, sCoursesList->name);
+
         //Prof will teach the course (There is no difference in the procedure to teach except the badness poitns)
         //Select the TAs
         //loop over TAs
         //Check if the course can run or not
+
         int flagTA = 0;
         int taLabs = 0;
+        int numavailableTAs = 0;
+        TA *availableTAs = (TA*) calloc(numTA*4, sizeof(TA));
+
         for(int t = 0; t < numTA; t++){
             TA *ta = (sTAsList+t);
             if(ta->numTakenCourses == 4){
@@ -208,52 +331,44 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
             for(int j = 0; j < ta->numTrainedCourses; j++){
                 if(strcmp(ta->courses[j],sCoursesList->name) == 0){
                     taLabs += 4-(ta->numTakenCourses);
+                    for(int tmp = 0; tmp < (4-(ta->numTakenCourses)); tmp++){
+                        *(availableTAs+numavailableTAs) = *ta;
+                        (availableTAs+numavailableTAs)->firstName[0] = (char) (tmp+'0');
+numavailableTAs++;
+                        
+                    }
                     break;
                 }
             }
             if(sCoursesList->numLabs <= taLabs){
                 flagTA = 1;
-                break;
+                // break;
             }
         }
         //If available TAs:
         if(flagTA == 1){
-            //Get combination of allowed TAs
-            for(int nLabs = 0; nLabs < sCoursesList->numLabs; nLabs++){
-                for(int t = 0; t < numTA; t++){
-                    TA *ta = (sTAsList+t);
-                    //get an allowed TA
-                    int allowed = 0;
-                    for(int j = 0; j < ta->numTrainedCourses; j++){
-                        if(strcmp(ta->courses[j],sCoursesList->name) == 0){
-                            allowed = 1;
-                        }
-                    }
-                    if(allowed == 0)
-                        continue;
-                    for(int tt = 1; tt <= (4-ta->numTakenCourses); tt++){
-                        //will take tt from this TA to fill the labs and the rest for other TAs
-                        //we need to choose the other TAs
-                        
-                    }
-                }
-                //Select the students
-                //Get combinination of allowed Students
-                //calc
-                //select other course
-                solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,badnessPoints);
-            }
-            
+            //Get all the combination of allowed TAs //get all applicable combinations
+            TA *local_TAs = (TA*) calloc(sCoursesList->numLabs,sizeof(TA));
+
+            // memcpy(local_TAs, TAsList,sizeof(TA*));
+            int tmpav = Min(sCoursesList->numLabs,numavailableTAs);
+            combinationTAs(availableTAs,local_TAs,0,tmpav,0,numavailableTAs-1,sCoursesList,sProfessorsList,sTAsList,sStudentsList,badnessPoints,schedule);
         }
         
         //If not available TAs, there is no possibility to run the course, whoever the professor
         else
             break;
     }
-
+    printf("END***\n");
     //don't forget to clear what you have changed in the professors, TAs, Students
     //badness points, memo it, increase the size of badness
-    solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,points+20);    //will not run the course
+    if(targetProf != NULL){
+        targetProf->numTakenCourses = 0;
+    }
+    schedule->numCourses--;
+
+    solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,points+20,schedule);    //will not run the course
+    printf("----------------\n");
 }
 
 int main(){
@@ -465,7 +580,7 @@ int main(){
 
         //Allocate memory for courses and badness
         // =
-        solve(coursesList, professorsList, TAsList, studentsList, 0);
+        // solve(coursesList, professorsList, TAsList, studentsList, 0);
         // schedule.courses = (Course*) calloc(schedule.numCourses, sizeof(Course));
         // schedule.badness = (Badness*) calloc(schedule.numBadness, sizeof(Badness));
 
@@ -532,8 +647,54 @@ int main(){
         // }
 
         printf("\n##### End Logic #####\n");
+        // printf("%s\n",coursesList->name);
+        // int flagTA = 0;
+        // int taLabs = 0;
+        // int numavailableTAs = 0;
+        // TA *availableTAs = (TA*) calloc(numTA*4, sizeof(TA));
+
+        // for(int t = 0; t < numTA; t++){
+        //     TA *ta = (TAsList+t);
+        //     if(ta->numTakenCourses == 4){
+        //         continue;
+        //     }
+        //     for(int j = 0; j < ta->numTrainedCourses; j++){
+        //         if(strcmp(ta->courses[j],coursesList->name) == 0){
+        //             taLabs += 4-(ta->numTakenCourses);
+        //             for(int tmp = 0; tmp < (4-(ta->numTakenCourses)); tmp++){
+        //                 *(availableTAs+numavailableTAs++) = *ta;
+        //             }
+        //             break;
+        //         }
+        //     }
+        //     if(coursesList->numLabs <= taLabs){
+        //         flagTA = 1;
+        //         // break;
+        //     }
+        // }
+        // //If available TAs:
+        // if(flagTA == 1){
+        //     //Get all the combination of allowed TAs //get all applicable combinations
+        //     TA *local_TAs = (TA*) calloc(coursesList->numLabs,sizeof(TA));
+
+        //     // memcpy(local_TAs, TAsList,sizeof(TA*));
+        //     for(int j = 0 ; j < numavailableTAs; j++)
+        //         printf("^^%s\n",availableTAs[j].firstName);
+        //     combinationTAs(availableTAs,local_TAs,0,coursesList->numLabs,0,numavailableTAs-1);
+        // }
+                printf("asdasd");
+
+        Schedule *schedule = (Schedule*) calloc(1, sizeof(Schedule));
+        schedule->courses = (Course**) calloc(1,sizeof(Course*));
+
+        // schedule->courses[0]->professor = (Professor*) calloc(1,sizeof(Professor));
+        // schedule->courses[0]->TAs = (TA*) calloc(1,sizeof(TA));
+        // schedule->courses[0]->students = (Student*) calloc(1,sizeof(Student));
 
 
+        solve(coursesList,professorsList,TAsList,studentsList,0,schedule);
+        
+        printf("%s\n",coursesList->name);
         free(coursesList);
         free(professorsList);
         free(TAsList);
