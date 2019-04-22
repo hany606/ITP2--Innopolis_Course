@@ -245,14 +245,8 @@ void clean(Schedule *s, Schedule *cs, Course *c, Course *cc, Professor *p, Profe
 
 void combinationTAs(TA **tas, TA **combTA, int index, int r,int start, int end,Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule, Badness *badness){
     if (index == r)  
-    {
-        // for(int i = 0; i < r; i++){
-        //     printf("%s%d\n",combTA[i]->firstName,combTA[i]->numTakenCourses);
-        // }
-        // printf("========================cOMB====================\n");
-        // for(int i = 0; i < numTA; i++){
-        //     printf("%s:%d\n",sTAsList[i].firstName,sTAsList[i].numTakenCourses);
-        // }
+    {  
+
         // schedule->courses->TAs = (TA*) calloc(r,sizeof(TA));
         Course *courseCpy = (Course*) calloc(1,sizeof(Course));
         Schedule *scheduleCpy = (Schedule*) calloc(1,sizeof(Schedule));
@@ -261,18 +255,16 @@ void combinationTAs(TA **tas, TA **combTA, int index, int r,int start, int end,C
 
         TA *taCpy = (TA*) calloc(r,sizeof(TA));
         sCoursesList->TAs = (TA**) calloc(r,sizeof(TA*));
+        // memcpy(sCoursesList->TAs, combTA,sizeof(TA*));
         for(int i = 0; i < r; i++){
-            memcpy((taCpy+i),combTA[i],sizeof(TA));
-        }
-        for(int i = 0; i < r; i++){
-
-            sCoursesList->TAs[i] = combTA[i];
-            combTA[i]->numTakenCourses++;
-            // printf("%s%d\n",taCpy[i].firstName,taCpy[i].numTakenCourses);
-
+//            // schedule->courses->TAs[i] = combTA[i];
+            memcpy((taCpy+i),sCoursesList->TAs[i],sizeof(TA));
+            // //(taCpy+i) = *(sCoursesList->TAs[i]);
+            // sCoursesList->TAs[i] = combTA[i];
             // sCoursesList->TAs[i]->numTakenCourses++;
             // int num = schedule->numCourses;
-            //printf("%s/",combTA[i].firstName);
+            // schedule->courses[num]->TAs[i] = combTA[i];
+            // //printf("%s/",combTA[i].firstName);
         }
         // for(int i = 0; i < r; i++){
         //     printf("TA#%d: %s\n",i+1,sCoursesList->TAs[i]->firstName);
@@ -283,34 +275,29 @@ void combinationTAs(TA **tas, TA **combTA, int index, int r,int start, int end,C
         
         // printf("\n");
 
-        // int numavailableStudents = 0;
-        // Student *availableStudents = (Student*) calloc(numStudents, sizeof(Student));
+        int numavailableStudents = 0;
+        Student *availableStudents = (Student*) calloc(numStudents, sizeof(Student));
 
-        // for(int s = 0; s < numStudents; s++){
-        //     Student *st = (sStudentsList+s);
-        //     for(int j = 0; j < st->numRequiredCourses; j++){
-        //         if(strcmp(st->courses[j],sCoursesList->name) == 0){
-        //             *(availableStudents+numavailableStudents++) = *st;
-        //             break;
-        //         }
-        //     }
-        // }
+        for(int s = 0; s < numStudents; s++){
+            Student *st = (sStudentsList+s);
+            for(int j = 0; j < st->numRequiredCourses; j++){
+                if(strcmp(st->courses[j],sCoursesList->name) == 0){
+                    *(availableStudents+numavailableStudents++) = *st;
+                    break;
+                }
+            }
+        }
         // //get all combinations of Students
         // Student *local_Students = (Student*) calloc(sCoursesList->numStudents,sizeof(Student));
         // int tmpav = Min(sCoursesList->numStudents,numavailableStudents);
         // combinationStudents(availableStudents,local_Students,0,tmpav,0,numavailableStudents-1,sCoursesList,sProfessorsList,sTAsList,sStudentsList,points,schedule,badness);
-
+        
         for(int i = 0; i < r; i++){
-            memcpy(combTA[i],(taCpy+i),sizeof(TA));  //return to the original
+            // memcpy(sCoursesList->TAs[i],(taCpy+i),sizeof(TA));  //return to the original
+            free(taCpy+i);  //free the copy
         }
-        free(taCpy);
         free(sCoursesList->TAs);    //free the array of pointers
         clean(schedule,scheduleCpy,sCoursesList,courseCpy,NULL,NULL,NULL,NULL,NULL,NULL);
-
-        // printf("^^^^^^^^^^^^^^^COMB^^^^^^^^^^\n");
-        // for(int i = 0; i < numTA; i++){
-        //     printf("%s:%d\n",sTAsList[i].firstName,sTAsList[i].numTakenCourses);
-        // }
         return;
     }
     // printf("%d %d %d %d", index, r, start, end);
@@ -334,6 +321,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
     // // printf("%d", res);
     // local_course->name = "asd";
 
+    int badnessPoints = points;
     //local schedule
     if(points > mnTotalPoints){
         return;
@@ -416,6 +404,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
             //He has zero class
             else{
                 professor->numTakenCourses += 2;
+                badnessPoints += 5;
                 flagProf = 2;
                 // printf("+2%s\n",professor->firstName);
                 //Badness, memo it, increase the size of badness
@@ -490,16 +479,8 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
 
             // memcpy(local_TAs, TAsList,sizeof(TA*));
             int tmpav = Min(sCoursesList->numLabs,numavailableTAs);
-            // printf("============================================\n");
-            // for(int i = 0; i < numTA; i++){
-            //     printf("%s:%d\n",sTAsList[i].firstName,sTAsList[i].numTakenCourses);
-            // }
+            printf("============================================\n");
             combinationTAs(availableTAs,local_TAs,0,tmpav,0,numavailableTAs-1,sCoursesList,sProfessorsList,sTAsList,sStudentsList,schedule->totalPoints,schedule,badness);
-            
-            // printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-            // for(int i = 0; i < numTA; i++){
-            //     printf("%s:%d\n",sTAsList[i].firstName,sTAsList[i].numTakenCourses);
-            // }
             free(availableTAs);
             free(local_TAs);
         }
