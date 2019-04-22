@@ -9,7 +9,6 @@
 #define outputFileNamePrefix "HanyHamedOutput"
 #define fileExtension ".txt"
 #define MAXBUFFER 50
-#define BADNESSSIZE 100
 
 int numCourses = 0;
 int numProf = 0;
@@ -76,14 +75,14 @@ typedef struct scheduleStruct
     int numCourses;
     int numBadness;
     Course **courses;       //array of pointers for the courses
-    // Badness *badness;       //array of badness
+    Badness *badness;       //array of badness
     unsigned long long int totalPoints;
 }Schedule;
 
 
 
 Schedule bestSchedule;
-void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule, Badness *badness);
+void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule);
 
 
 int readToken(char *token,int maxBuffer,FILE* fptr){
@@ -146,7 +145,7 @@ void setStudent(Student *sptr, char fName[], char lName[], char id[], char **cou
 }
 
 
-void combinationStudents(Student *st, Student *combStudent, int index, int r, int start, int end, Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule,Badness *badness){
+void combinationStudents(Student *st, Student *combStudent, int index, int r, int start, int end, Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule){
     if(index == r){
         //Get all combinination of allowed Students
         //select other course
@@ -159,19 +158,19 @@ void combinationStudents(Student *st, Student *combStudent, int index, int r, in
             // printf("%s/",combStudent[i].firstName);
         }
         // printf("\n");
-        solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,points,schedule,badness);
+        solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,points,schedule);
         // free(sCoursesList->TAs);
         return;
     }
     for(int i = start; i <= end && end-i+1 >= r-index; i++){
         *(combStudent+index) = *(st+i);
-        combinationStudents(st, combStudent, index+1,r, i+1, end, sCoursesList, sProfessorsList, sTAsList, sStudentsList, points,schedule, badness);
+        combinationStudents(st, combStudent, index+1,r, i+1, end, sCoursesList, sProfessorsList, sTAsList, sStudentsList, points,schedule);
     }
 
 
 }
 
-void combinationTAs(TA *tas, TA *combTA, int index, int r,int start, int end,Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule, Badness *badness){
+void combinationTAs(TA *tas, TA *combTA, int index, int r,int start, int end,Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points, Schedule *schedule){
     if (index == r)  
     {  
         // schedule->courses->TAs = (TA*) calloc(r,sizeof(TA));
@@ -201,7 +200,7 @@ void combinationTAs(TA *tas, TA *combTA, int index, int r,int start, int end,Cou
         //get all combinations of Students
         Student *local_Students = (Student*) calloc(sCoursesList->numStudents,sizeof(Student));
         int tmpav = Min(sCoursesList->numStudents,numavailableStudents);
-        combinationStudents(availableStudents,local_Students,0,tmpav,0,numavailableStudents-1,sCoursesList,sProfessorsList,sTAsList,sStudentsList,points,schedule,badness);
+        combinationStudents(availableStudents,local_Students,0,tmpav,0,numavailableStudents-1,sCoursesList,sProfessorsList,sTAsList,sStudentsList,points,schedule);
         // free(sCoursesList->TAs);
         return;
     }
@@ -209,13 +208,13 @@ void combinationTAs(TA *tas, TA *combTA, int index, int r,int start, int end,Cou
     for(int i = start; i <= end && end-i+1 >= r-index; i++){
         // printf("//\n");
         *(combTA+index) = *(tas+i);
-        combinationTAs(tas, combTA, index+1,r, i+1, end, sCoursesList, sProfessorsList, sTAsList, sStudentsList, points,schedule,badness);
+        combinationTAs(tas, combTA, index+1,r, i+1, end, sCoursesList, sProfessorsList, sTAsList, sStudentsList, points,schedule);
     }
 
 
 }
 
-void printSchedule(Schedule *schedule,Badness *badness){
+void printSchedule(Schedule *schedule){
 
     printf("#######################################\n");
         printf("Num of courses%d\n",schedule->numCourses);
@@ -235,14 +234,14 @@ void printSchedule(Schedule *schedule,Badness *badness){
             printf("\n");
         }
 
-        printf("Num of badness: %d\n",schedule->numBadness);
-        for(int j = 0; j < schedule->numBadness; j++){
-            if(badness[j].type == 1)
-                printf("Badness#%d: Type%d: Course:%s\n", j+1, badness[j].type,badness[j].course->name);
+        // printf("Num of badness: %d\n",schedule->numBadness);
+        // for(int j = 0; j < schedule->numBadness; j++){
+        //     if(schedule->badness[j].type == 1)
+        //         printf("Badness#%d: Type%d: Course:%s\n", j+1, schedule->badness[j].type,schedule->badness[j].course->name);
 
-            else if(badness[j].type == 3)
-                printf("Badness#%d: Type%d: Prof:%s: Course:%s\n", j+1, badness[j].type,badness[j].professor->firstName,badness[j].course->name);
-        }
+        //     else if(schedule->badness[j].type == 3)
+        //         printf("Badness#%d: Type%d: Prof:%s: Course:%s\n", j+1, schedule->badness[j].type,schedule->badness[j].professor->firstName,schedule->badness[j].course->name);
+        // }   
         
         printf("#######################################\n");
 }
@@ -252,43 +251,37 @@ void clean(Schedule *s, Schedule *cs, Course *c, Course *cc, Professor *p, Profe
         // Schedule *tmp = s;
         // s = (Schedule*) realloc(tmp,sizeof(Schedule));
         memcpy(s,cs,sizeof(Schedule));
-        free(cs);
-
     }
     if(c != NULL && cc != NULL){
         // Course *tmp = c;
         // c = (Course*) realloc(tmp,sizeof(Course));      
         memcpy(c,cc,sizeof(Course));
-        free(cc);
-
     }
     if(p != NULL && cp != NULL){
         // Professor *tmp = p;
         // p = (Professor*) realloc(tmp,sizeof(Professor));
         memcpy(p,cp,sizeof(Professor));
-        free(cp);
-
     }
     if(t != NULL && ct != NULL){    
         // TA *tmp = t;
         // t = (TA*) realloc(tmp,sizeof(TA));
         memcpy(t,ct,sizeof(TA));
-        free(ct);
-
     }
     if(st != NULL && cst != NULL){
         // Student *tmp = st;
         // st = (Student*) realloc(tmp,sizeof(Student));
         memcpy(st,cst,sizeof(Student));
-        free(cst);
     }
+    free(cs);
+    free(cc);
+    free(cp);
 
 }
 
 
-void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points,Schedule *schedule, Badness *badness){
-    // printSchedule(schedule,badness);
-    // printf("------------------------------------------------------------------\n");
+void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Student *sStudentsList,unsigned long long int points,Schedule *schedule){
+    printSchedule(schedule);
+    printf("------------------------------------------------------------------\n");
 
     // Course *local_course = (Course*) calloc(numCourses, sizeof(Course));
     // memcpy(local_course,sCoursesList, sizeof(Course*));
@@ -306,7 +299,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
         printf("calc -> Leaf\n");
         printf("END branch\n");
 
-        printSchedule(schedule,badness);
+        printSchedule(schedule);
         return;
     }
     // printf("^%s\n",sCoursesList->name);
@@ -331,17 +324,16 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
         // printf("%d",assd->type);
         // printf("ooasm11111dopasd\n");
 
-        Badness *badnesscpy = (Badness*) calloc(BADNESSSIZE,sizeof(Badness));
+        // Badness *badnesscpy = (Badness*) calloc(1,sizeof(Badness));
         // printf("56168681616\n");
-        memcpy(badnesscpy,badness,sizeof(Badness));
-        // *badnesscpy = *badness;
+        // memcpy(badnesscpy,schedule->badness,sizeof(Badness));
         // printf("ooasmdopasd\n");
     
 
         //if he has two classes, continue
         if(professor->numTakenCourses == 2){
-            // printf("%s has two classes\n",professor->firstName);
-            clean(schedule, scheduleCpy, sCoursesList,courseCpy,professor,profCpy, NULL, NULL,NULL,NULL);
+            printf("%s has two classes\n",professor->firstName);
+            // clean(NULL, NULL, sCoursesList,courseCpy,professor,profCpy, NULL, NULL,NULL,NULL);
             continue;
         }
         //Check if he is trained or not
@@ -362,15 +354,15 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
         if(trainedProfessor == 1){
             professor->numTakenCourses++;
             flagProf = 1;
-            // printf("+1%s\n",professor->firstName);
+            printf("+1%s\n",professor->firstName);
         }
         
         //he is not trained
         else{
             //He has already a class and he cannot take this class as he is not trained
             if(professor->numTakenCourses == 1){
-                // printf("%s has 1 classes and untrained\n",professor->firstName);
-                clean(schedule, scheduleCpy, sCoursesList,courseCpy,professor,profCpy, NULL, NULL,NULL,NULL);
+                printf("%s has 1 classes and untrained\n",professor->firstName);
+                // clean(schedule, scheduleCpy, sCoursesList,courseCpy,professor,profCpy, NULL, NULL,NULL,NULL);
                 // printf("asdasdasdasdasfosdmgo,\n");
                 // printSchedule(schedule);
                 continue;
@@ -380,22 +372,21 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
                 professor->numTakenCourses += 2;
                 badnessPoints += 5;
                 flagProf = 2;
-                // printf("+2%s\n",professor->firstName);
+                printf("+2%s\n",professor->firstName);
                 //Badness, memo it, increase the size of badness
                 // badnessPoints +=
                 schedule->totalPoints +=5;
 
-                int num = schedule->numBadness;
-                // printf("numBad;%d\n",num);
+                // int num = schedule->numBadness;
                 // Badness *bdc = schedule->badness;
-                // printf("%p",badness);
-                // badness = (Badness*) realloc(badness,(num+1)*sizeof(Badness));
-                // return;
-                badness[num].professor = professor;
-                badness[num].type = 3;
-                badness[num].course = sCoursesList;
-                schedule->totalPoints += 5;
-                schedule->numBadness++;
+
+                // schedule->badness = (Badness*) realloc(bdc,(num+1)*sizeof(Badness));
+                printf("lhdsfiundszdoijndsfc\n");
+                // schedule->badness[num].professor = professor;
+                // schedule->badness[num].type = 3;
+                // schedule->badness[num].course = sCoursesList;
+                // schedule->totalPoints += 5;
+                // schedule->numBadness++;
             }
         }
 
@@ -461,7 +452,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
 //         //If not available TAs, there is no possibility to run the course, whoever the professor
 //         else
 //             break;
-        solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,schedule->totalPoints,schedule,badness);    //will not run the course
+        solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,schedule->totalPoints,schedule);    //will not run the course
         // printSchedule(schedule);
         // printf("%s:%d\n",professor->firstName,professor->numTakenCourses);
         // printf("%s:%d\n",profCpy->firstName,profCpy->numTakenCourses);
@@ -470,43 +461,43 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
         clean(schedule, scheduleCpy, sCoursesList,courseCpy,professor,profCpy, NULL, NULL,NULL,NULL);
         // Badness *bdc = schedule->badness;
         // schedule->badness = (Badness*) realloc(bdc,sizeof(Badness));
-        memcpy(badness,badnesscpy,sizeof(Badness));
-        free(badnesscpy);
-        // printf("Endloop\n");
-        // printSchedule(schedule,badness);
+        // memcpy(schedule->badness,badnesscpy,sizeof(Badness));
+        // free(badnesscpy);
+        printf("Endloop\n");
+        printSchedule(schedule);
         // memcpy(professor,profCpy,sizeof(Professor));
         // // printf("%s:%d\n",professor->firstName,professor->numTakenCourses);
         // memcpy(schedule,scheduleCpy,sizeof(Schedule));
         // memcpy(sCoursesList,courseCpy,sizeof(Course));
     }
-    // printf("END***\n");
+    printf("END***\n");
     //don't forget to clear what you have changed in the professors, TAs, Students
     //badness points, memo it, increase the size of badness
-    // printf("------------------------------------------------------------------\n");
-    // printSchedule(schedule,badness);
+    printf("------------------------------------------------------------------\n");
+    printSchedule(schedule);
     Schedule *scheduleCpy = (Schedule*) calloc(1,sizeof(Schedule));
-    Badness *badnesscpy2 = (Badness*) calloc(BADNESSSIZE,sizeof(Badness));
+    // Badness *badnesscpy2 = (Badness*) calloc(1,sizeof(Badness));
     
     memcpy(scheduleCpy,schedule,sizeof(Schedule));
-    memcpy(badnesscpy2,badness,sizeof(Badness));
+    // memcpy(badnesscpy2,schedule->badness,sizeof(Badness));
     
 
-    int num = schedule->numBadness;
+    // int num = schedule->numBadness;
     // Badness *bdc = schedule->badness;
-    // badness = (Badness*) realloc(bdc,(num+1)*sizeof(Badness));
-    badness[num].type = 1;
-    badness[num].course = sCoursesList;
-    schedule->totalPoints += 20;
-    schedule->numBadness++; 
+    // schedule->badness = (Badness*) realloc(bdc,(num+1)*sizeof(Badness));
+    // schedule->badness[num].type = 1;
+    // schedule->badness[num].course = sCoursesList;
+    // schedule->totalPoints += 20;
+    // schedule->numBadness++; 
     
-    solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,schedule->totalPoints,schedule,badness);    //will not run the course
+    solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,schedule->totalPoints,schedule);    //will not run the course
     memcpy(schedule,scheduleCpy,sizeof(Schedule));
-    memcpy(badness,badnesscpy2,sizeof(Badness));
+    // memcpy(schedule->badness,badnesscpy2,sizeof(Badness));
     free(scheduleCpy);
-    free(badnesscpy2);
+    // free(badnesscpy2);
 
 
-    // printf("----------------\n");
+    printf("----------------\n");
 }
 
 int main(){
@@ -824,22 +815,21 @@ int main(){
                 // printf("asdasd");
 
         Schedule *schedule = (Schedule*) calloc(1, sizeof(Schedule));
-        Badness *badness = (Badness*) calloc(BADNESSSIZE,sizeof(Badness));
         schedule->courses = (Course**) calloc(1,numCourses*sizeof(Course*));
         schedule->numCourses = 0;
+        schedule->badness = (Badness*) calloc(1,sizeof(Badness));
         // schedule->courses[0]->professor = (Professor*) calloc(1,sizeof(Professor));
         // schedule->courses[0]->TAs = (TA*) calloc(1,sizeof(TA));
         // schedule->courses[0]->students = (Student*) calloc(1,sizeof(Student));
 
 
-        solve(coursesList,professorsList,TAsList,studentsList,0,schedule,badness);
+        solve(coursesList,professorsList,TAsList,studentsList,0,schedule);
         
         printf("%s\n",coursesList->name);
         free(coursesList);
         free(professorsList);
         free(TAsList);
         free(studentsList);
-        free(badness);
         fclose(inputFileptr);
         fclose(outputFileptr);
     }
