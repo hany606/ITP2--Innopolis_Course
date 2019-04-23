@@ -10,7 +10,7 @@
  * Innopolis University, Sprinng 2019
  * Assignment 2, University Scheduling problem
  * Author: Hany Hamed
- * Version: V2.3.2
+ * Version: V2.3.2 (Final)
  */
 
 #define inputFileNamePrefix "input"             //The prefix of the name of the input file
