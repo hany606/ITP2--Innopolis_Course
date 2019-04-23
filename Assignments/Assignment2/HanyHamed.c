@@ -10,14 +10,14 @@
  * Innopolis University, Sprinng 2019
  * Assignment 2, University Scheduling problem
  * Author: Hany Hamed
- * Version: V2.2
+ * Version: V2.3.2
  */
 
 #define inputFileNamePrefix "input"             //The prefix of the name of the input file
 #define outputFileNamePrefix "HanyHamedOutput"  //The prefix of the name of the output file
 #define fileExtension ".txt"                    //the extension of the files
-#define MAXBUFFER 50                            //The maximum buffer for the names and the strings in the program
-#define BADNESSSIZE 100                         //The maximum number of badness points that can appear
+#define MAXBUFFER 100                            //The maximum buffer for the names and the strings in the program
+#define BADNESSSIZE 500                         //The maximum number of badness points that can appear
 #define Min(x,y) (x >= y ? y : x)               //Macro for the calculate the minimum of 2 vars 
 
 int numCourses = 0;                                 //Global var to store the num of courses in the inputs
