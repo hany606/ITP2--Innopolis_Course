@@ -1269,6 +1269,61 @@ int main(){
 
         
         }
+
+        //check uniqness of Course's name
+        int uniqnessFlag = 0;
+        for(int j = 0; j < numCourses; j++){
+            for(int u = j+1; u < numCourses; u++){
+                if(strcmp(coursesList[j].name,coursesList[u].name)==0){
+                    uniqnessFlag = 1;
+                    invalidFlag = 1;
+                }
+            }
+            if(uniqnessFlag)
+                break;
+        }
+
+        //check uniqness of Professor's name
+        uniqnessFlag = 0;
+        for(int j = 0; j < numProf; j++){
+            for(int u = j+1; u < numProf; u++){
+                if(strcmp(professorsList[j].firstName,professorsList[u].firstName)==0 && strcmp(professorsList[j].lastName,professorsList[u].lastName)==0){
+                    uniqnessFlag = 1;
+                    invalidFlag = 1;
+                }
+            }
+            if(uniqnessFlag)
+                break;
+        }
+
+        //check uniqness of TA's name
+        uniqnessFlag = 0;
+        for(int j = 0; j < numTA; j++){
+            for(int u = j+1; u < numTA; u++){
+                if(strcmp(TAsList[j].firstName,TAsList[u].firstName)==0 && strcmp(TAsList[j].lastName,TAsList[u].lastName)==0){
+                    uniqnessFlag = 1;
+                    invalidFlag = 1;
+                }
+            }
+            if(uniqnessFlag)
+                break;
+        }
+
+
+
+        uniqnessFlag = 0;
+        for(int j = 0; j < numStudents; j++){
+            for(int u = j+1; u < numStudents; u++){
+                if(strcmp(studentsList[j].id,studentsList[u].id)==0){
+                    uniqnessFlag = 1;
+                    invalidFlag = 1;
+                }
+            }
+            if(uniqnessFlag)
+                break;
+        }
+
+
         //--------------------------------------------------------------------------
         if(invalidFlag == 1){
             fprintf(outputFileptr,"%s","Invalid input.");
