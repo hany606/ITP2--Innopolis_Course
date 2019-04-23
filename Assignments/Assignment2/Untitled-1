@@ -368,9 +368,6 @@ void formatOutput(BestSchedule *schedule,BestBadness *badness, FILE *fptr){
 
         for(int j = 0; j < (schedule->courses[i]).numCurrentStudents; j++ )
         {
-            //if there is a null struct break (safety)
-            if(schedule->courses[i].students[j].firstName == NULL)
-                break;
             fprintf(fptr,"%s %s %s\n",schedule->courses[i].students[j].firstName,schedule->courses[i].students[j].lastName,schedule->courses[i].students[j].id);
         }
         fprintf(fptr,"\n");
@@ -477,11 +474,16 @@ void combinationStudents(Student **st, Student **combStudent, int index, int r, 
         //Iterate over the combination of students
         for(int i = 0; i < r; i++){
             sCoursesList->students[i] = combStudent[i];     //register the students in the courses
-            combStudent[i]->takenCourses = (char**) calloc(numCourses,sizeof(char*));
             int num = combStudent[i]->numTakenCourses;      //get the number of the course that the student taken until now (Works as index)
+            //if it is his first course
+            if(num == 0){
+                //Allocate memory for the course to store its name
+                combStudent[i]->takenCourses = (char**) calloc(1,sizeof(char*));
+            }
             combStudent[i]->takenCourses[num]= sCoursesList->name;  //Store the name of the course in the correct place in the array of strings of the names of the courses
-            //Reallocate the memory for bigger courses
             combStudent[i]->numTakenCourses++;                      //increase the number
+            //Reallocate the memory for bigger courses
+            combStudent[i]->takenCourses = (char**) realloc(combStudent[i]->takenCourses,(num+1)*sizeof(char*));
             sCoursesList->numCurrentStudents++;                     //increase the number of current students in the course
         }
 
@@ -693,6 +695,8 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
         //Calculate if the student didn't take his required courses
         //iterate over the list and check
         for(int i = 0; i < numStudents; i++){
+            if(schedule->courses[i]->students[j] == NULL)
+                break;
             //if he has less than the number he required
             if(sStudentsList[i].numTakenCourses < sStudentsList[i].numRequiredCourses){
                 //iterate over his courses list, and the courses he needs and get the name of that course
@@ -759,7 +763,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
                 }
 
                 for(int x = 0; x < schedule->courses[i]->numCurrentStudents; x++){
-                    if(schedule->courses[i]->students[x] == NULL)
+                    if(schedule->courses[i]->students[j] == NULL)
                         break;
                     bestSchedule->courses[i].students[x].firstName = schedule->courses[i]->students[x]->firstName;
                     bestSchedule->courses[i].students[x].lastName = schedule->courses[i]->students[x]->lastName;
@@ -931,7 +935,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
 
 int main(){
     int upperbound = 0;
-    for(int i = 1 ; i  <= 50; i++){
+    for(int i = 1 ; i  <= 2; i++){
         char inputFileName[12];
         char outputFileName[21];
 
@@ -946,7 +950,7 @@ int main(){
     // printf("%d\n",upperbound);
 
     for(int i = 1 ; i  <= upperbound; i++){
-        // printf("File #%d\n",i);
+        printf("File #%d\n",i);
         char inputFileName[12];
         char outputFileName[21];
 
@@ -963,8 +967,8 @@ int main(){
         }
 
 
-        // printf("State: Opened\n");
-        mnTotalPoints = ULLONG_MAX;
+        printf("State: Opened\n");
+        mnTotalPoints = ULLONG_MAX-1;
         numCourses = 0;                                 //Global var to store the num of courses in the inputs
         numProf = 0;                                    //Global var to store the num of professors in the inputs
         numTA = 0;                                      //Global var to store the num of TAs in the inputs
@@ -979,7 +983,7 @@ int main(){
         printf("%s\t%s\n", inputFileName,outputFileName);
 
         //Read courses
-        // printf("\n##### Start Reading Courses #####\n");
+        printf("\n##### Start Reading Courses #####\n");
         for(int x = 0; ; x++){
             char *courseName = (char*) calloc(1, MAXBUFFER);
             char *tmp = (char*) calloc(1, MAXBUFFER);
@@ -998,15 +1002,15 @@ int main(){
             state = readToken(tmp,MAXBUFFER,inputFileptr);
             numberStudents = atoi(tmp);
 
-            // printf("\n%d. %s %d %d\n", x+1, courseName, numberRequiredLabs, numberStudents);
+            printf("\n%d. %s %d %d\n", x+1, courseName, numberRequiredLabs, numberStudents);
             setCourse((coursesList+numCourses),courseName, numberRequiredLabs, numberStudents);
             coursesList = (Course*) realloc(coursesList, ((++numCourses)+1)*sizeof(Course));
             (coursesList+numCourses)->name = NULL;
 
         }
-        // printf("\n##### End Reading Courses #####\n");
+        printf("\n##### End Reading Courses #####\n");
 
-        // printf("\n##### Start Reading Professors #####\n");
+        printf("\n##### Start Reading Professors #####\n");
         for(int x = 0; ; x++){
 
             int numCourses = 0;
@@ -1024,7 +1028,7 @@ int main(){
                 break;
             }
             state = readToken(professorLastName,MAXBUFFER,inputFileptr);
-            // printf("\n%d. %s %s", x+1, professorFirstName, professorLastName);
+            printf("\n%d. %s %s", x+1, professorFirstName, professorLastName);
 
             while(1){
                 *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
@@ -1040,9 +1044,9 @@ int main(){
             professorsList = (Professor*) realloc(professorsList, ((++numProf)+1)*sizeof(Professor));
 
         }
-        // printf("\n##### End Reading Professors #####\n");
+        printf("\n##### End Reading Professors #####\n");
 
-        // printf("\n##### Start Reading TAs #####\n");
+        printf("\n##### Start Reading TAs #####\n");
         for(int x = 0; ; x++){
             
             int numCourses = 0;
@@ -1060,28 +1064,28 @@ int main(){
             }
             state = readToken(TALastName,MAXBUFFER,inputFileptr);
 
-            // printf("\n%d. %s %s", x+1, TAFirstName, TALastName);
+            printf("\n%d. %s %s", x+1, TAFirstName, TALastName);
             
             while(1){
                 *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
                 state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
                 //New line
-                // printf(" %s",*(courses+numCourses));
+                printf(" %s",*(courses+numCourses));
                 if(state == 2)
                     break;
                 courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
             }
             
-            // printf("\n");
+            printf("\n");
             setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses+1);
             TAsList = (TA*) realloc(TAsList, ((++numTA)+1)*sizeof(TA));
             // free(courses); 
 
         
         }
-        // printf("\n##### End Reading TAs #####\n");
+        printf("\n##### End Reading TAs #####\n");
 
-        // printf("\n##### Start Reading Students #####\n");
+        printf("\n##### Start Reading Students #####\n");
         for(int x = 0; ; x++){
 
             int numCourses = 0;
@@ -1097,19 +1101,19 @@ int main(){
             state = readToken(studentLastName,MAXBUFFER,inputFileptr);
             state = readToken(studentID,MAXBUFFER,inputFileptr);
 
-            // printf("\n%d. %s %s %s", x+1, studentFirstName, studentLastName, studentID);
+            printf("\n%d. %s %s %s", x+1, studentFirstName, studentLastName, studentID);
             
             while(1){
                 *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
                 state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
                 //New line
-                // printf(" %s",*(courses+numCourses));
+                printf(" %s",*(courses+numCourses));
                 // free(trainedCourse);
                 if(state == 2 || state == 3)
                     break;
                 courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
             }
-            // printf("\n");
+            printf("\n");
             setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses+1);
             studentsList = (Student*) realloc(studentsList, ((++numStudents)+1)*sizeof(Student));
 
@@ -1121,11 +1125,11 @@ int main(){
             }
         
         }
-        // printf("\n##### End Reading Students #####\n");
+        printf("\n##### End Reading Students #####\n");
 
         
         
-        // printf("\n##### Start Logic #####\n");
+        printf("\n##### Start Logic #####\n");
 
         
 
@@ -1145,12 +1149,12 @@ int main(){
         bestBadness = (BestBadness*) calloc(BADNESSSIZE,sizeof(Badness));
 
         solve(coursesList,professorsList,TAsList,studentsList,schedule,badness);
-        // printf("\n##### End Logic #####\n");
+        printf("\n##### End Logic #####\n");
 
 
-        // printf("#######FINAL######\n");
-        // printBestSchedule(bestSchedule,bestBadness);
-        // printf("#######FINAL######\n");
+        printf("#######FINAL######\n");
+        printBestSchedule(bestSchedule,bestBadness);
+        printf("#######FINAL######\n");
         formatOutput(bestSchedule,bestBadness,outputFileptr);
         
         free(coursesList);

@@ -1,1 +1,25 @@
-Total score is 0.
+Math
+Joseph Brown
+Marat Mingazov
+Marat Mingazov
+Marat Mingazov
+Marat Mingazov
+Mark Lancaster 02930
+Andy Turner 23498
+Peter Myles 29398
+
+Programming
+Joseph Brown
+Munir Makhmutov
+Munir Makhmutov
+Munir Makhmutov
+Munir Makhmutov
+Mark Lancaster 02930
+John Smith 92383
+Andy Turner 23498
+Peter Myles 29398
+
+Philosophy cannot be run.
+Giancarlo Succi is unassigned.
+John Smith is lacking Philosophy.
+Total score is 31.
