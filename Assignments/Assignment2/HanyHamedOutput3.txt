@@ -5,8 +5,10 @@ Marat Mingazov
 Marat Mingazov
 Marat Mingazov
 Mark Lancaster 02930
+John Smith 92383
 Andy Turner 23498
 Peter Myles 29398
+Samuel Cage 69943
 
 Programming
 Joseph Brown
@@ -18,8 +20,9 @@ Mark Lancaster 02930
 John Smith 92383
 Andy Turner 23498
 Peter Myles 29398
+Samuel Cage 69943
 
 Philosophy cannot be run.
 Giancarlo Succi is unassigned.
-John Smith is lacking Philosophy.
-Total score is 31.
+Manuel Mazzara is unassigned.
+Total score is 40.

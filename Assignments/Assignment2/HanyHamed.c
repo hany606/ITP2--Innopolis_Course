@@ -10,7 +10,7 @@
  * Innopolis University, Sprinng 2019
  * Assignment 2, University Scheduling problem
  * Author: Hany Hamed
- * Version: V1.2
+ * Version: V2.2
  */
 
 #define inputFileNamePrefix "input"             //The prefix of the name of the input file
@@ -174,10 +174,10 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
      *      = 2 -> newLine
      *      = 3 -> EOF
  */
-int readToken(char *token,int maxBuffer,FILE* fptr){
+int readToken(char *token,FILE* fptr){
     int flag = 0;
     //Read until the buffer ends
-    for(int i = 0; i < maxBuffer; i++){
+    for(int i = 0; i < MAXBUFFER; i++){
         char tmp = fgetc(fptr); //get the char from the input
         if(tmp == ' ')
             flag = 1;
@@ -267,6 +267,7 @@ void printSchedule(Schedule *schedule,Badness *badness){
         }
         printf("\nStudents:\n");
         // printf("%s \n",schedule->courses[i]->students[0]->firstName);
+        printf("NUMBER OF %d\n",schedule->courses[i]->numCurrentStudents);
         for(int j = 0; j < (schedule->courses[i])->numCurrentStudents; j++ )
         {
             if(schedule->courses[i]->students[j] == NULL)
@@ -368,9 +369,6 @@ void formatOutput(BestSchedule *schedule,BestBadness *badness, FILE *fptr){
 
         for(int j = 0; j < (schedule->courses[i]).numCurrentStudents; j++ )
         {
-            //if there is a null struct break (safety)
-            if(schedule->courses[i].students[j].firstName == NULL)
-                break;
             fprintf(fptr,"%s %s %s\n",schedule->courses[i].students[j].firstName,schedule->courses[i].students[j].lastName,schedule->courses[i].students[j].id);
         }
         fprintf(fptr,"\n");
@@ -482,8 +480,8 @@ void combinationStudents(Student **st, Student **combStudent, int index, int r, 
             combStudent[i]->takenCourses[num]= sCoursesList->name;  //Store the name of the course in the correct place in the array of strings of the names of the courses
             //Reallocate the memory for bigger courses
             combStudent[i]->numTakenCourses++;                      //increase the number
-            sCoursesList->numCurrentStudents++;                     //increase the number of current students in the course
         }
+        sCoursesList->numCurrentStudents = r;
 
         //Call solve for the next courses with this state
         solve((sCoursesList+1),sProfessorsList, sTAsList, sStudentsList,schedule,badness);
@@ -719,7 +717,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
                 }
             }
         }
-        
+
         //if he has less points after the new caluclation, then it is better schedule
         if(mnTotalPoints > schedule->totalPoints){
             mnTotalPoints = schedule->totalPoints;              //store the minimum points that we have now
@@ -744,7 +742,7 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
                     bestBadness[i].courseName = badness[i].courseName;
                 bestBadness[i].type = badness[i].type;
             }
-            
+
             //copy the courses, TAs, Professors, Students
             for(int i = 0; i < schedule->numCourses; i++){
                 bestSchedule->courses[i].name = schedule->courses[i]->name;
@@ -759,14 +757,16 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
                 }
 
                 for(int x = 0; x < schedule->courses[i]->numCurrentStudents; x++){
-                    if(schedule->courses[i]->students[x] == NULL)
-                        break;
                     bestSchedule->courses[i].students[x].firstName = schedule->courses[i]->students[x]->firstName;
                     bestSchedule->courses[i].students[x].lastName = schedule->courses[i]->students[x]->lastName;
                     bestSchedule->courses[i].students[x].id = schedule->courses[i]->students[x]->id;
+
                 }
+
             }
         }
+        
+
         //if not the optimal, restore the original state of the schedule and free
         clean(schedule, scheduleCpy, NULL,NULL,NULL,NULL, NULL, NULL,NULL,NULL);
         memcpy(badness,badnesscpy,sizeof(Badness));
@@ -930,12 +930,14 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
 }
 
 int main(){
+    //get the upper bound of files number
+    //iterate on them and check the max file that will open
     int upperbound = 0;
+    char *eptr;
     for(int i = 1 ; i  <= 50; i++){
         char inputFileName[12];
         char outputFileName[21];
-
-
+        //concatnate the name of the input and output files
         sprintf(inputFileName,"%s%d%s",inputFileNamePrefix,i,fileExtension);
         sprintf(outputFileName,"%s%d%s",outputFileNamePrefix,i,fileExtension);
 
@@ -945,17 +947,29 @@ int main(){
     }
     // printf("%d\n",upperbound);
 
+    //iterate on files
     for(int i = 1 ; i  <= upperbound; i++){
+        //initialize the global vars
+        mnTotalPoints = ULLONG_MAX;
+        numCourses = 0;                                 //Global var to store the num of courses in the inputs
+        numProf = 0;                                    //Global var to store the num of professors in the inputs
+        numTA = 0;                                      //Global var to store the num of TAs in the inputs
+        numStudents = 0;
+        
+        int invalidFlag = 0;
         // printf("File #%d\n",i);
         char inputFileName[12];
         char outputFileName[21];
 
-
+        //concatnate the name of the input and output files
         sprintf(inputFileName,"%s%d%s",inputFileNamePrefix,i,fileExtension);
         sprintf(outputFileName,"%s%d%s",outputFileNamePrefix,i,fileExtension);
 
+        //open the file
         FILE *inputFileptr = fopen(inputFileName,"r");
+        //if is not exist
         if(inputFileptr == NULL){
+            //print invalid input and close it
             FILE *outputFileptr = fopen(outputFileName,"w");
             fprintf(outputFileptr,"%s","Invalid input.");
             fclose(outputFileptr);
@@ -963,196 +977,337 @@ int main(){
         }
 
 
-        // printf("State: Opened\n");
-        mnTotalPoints = ULLONG_MAX;
-        numCourses = 0;                                 //Global var to store the num of courses in the inputs
-        numProf = 0;                                    //Global var to store the num of professors in the inputs
-        numTA = 0;                                      //Global var to store the num of TAs in the inputs
-        numStudents = 0;
 
+        //create lists for courses, professors, TAs, students
         Course *coursesList = (Course*) calloc(numCourses+1, sizeof(Course));
         Professor *professorsList = (Professor*) calloc(numProf+1, sizeof(Professor));
         TA *TAsList = (TA*) calloc(numTA+1, sizeof(TA));
-        Student *studentsList = (Student*) calloc(numStudents+1, sizeof(Student));    
+        Student *studentsList = (Student*) calloc(numStudents+1, sizeof(Student));
+        //open the output file  
         FILE *outputFileptr = fopen(outputFileName,"w");
 
-        printf("%s\t%s\n", inputFileName,outputFileName);
 
         //Read courses
-        // printf("\n##### Start Reading Courses #####\n");
         for(int x = 0; ; x++){
-            char *courseName = (char*) calloc(1, MAXBUFFER);
-            char *tmp = (char*) calloc(1, MAXBUFFER);
+            char *tmp = (char*) calloc(1, MAXBUFFER); //var to store the token
+            char *courseName = (char*) calloc(1, MAXBUFFER);    //store the name of the course
             int numberRequiredLabs;
-            int numberStudents;            
-            int state;
+            int numberStudents;       
+            int state;  //store the state of the token
 
-            state = readToken(courseName,MAXBUFFER,inputFileptr);
+            state = readToken(courseName,inputFileptr);   //read the name
+            //if is just P, the end of courses
             if(courseName[0] == 'P' && courseName[1] == '\0'){
                 // free(courseName);
                 // free(tmp);
                 break;
             }
-            state = readToken(tmp,MAXBUFFER,inputFileptr);
-            numberRequiredLabs = atoi(tmp);
-            state = readToken(tmp,MAXBUFFER,inputFileptr);
-            numberStudents = atoi(tmp);
 
-            // printf("\n%d. %s %d %d\n", x+1, courseName, numberRequiredLabs, numberStudents);
+
+            //check if the name is T, P or S this will be invalid
+            if(strcmp(courseName,"T") == 0 || strcmp(courseName,"P") == 0 || strcmp(courseName,"S") == 0)
+                invalidFlag = 1;
+
+            //check that the name is only English letter not 
+            for(int j = 0; j < MAXBUFFER && courseName[j] != '\0'; j++){
+                if(!((courseName[j] >= 'a' && courseName[j] <= 'z') ||(courseName[j] >= 'A' && courseName[j] <= 'Z'))){
+                    
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+            state = readToken(tmp,inputFileptr);      //read the number of required labs
+            //checking for leading zeros or negative number
+            if(tmp[0] == '-' || tmp[0] == '0')
+                invalidFlag = 1;
+            
+            numberRequiredLabs = strtol(tmp, &eptr, 10);    //convert to int
+            //checking at least one lab
+            if(numberRequiredLabs == 0)
+                invalidFlag = 1;
+            state = readToken(tmp,inputFileptr);      //read the number of students
+            //checking for leading zeros or negative number
+            if(tmp[0] == '-' || tmp[0] == '0')
+                invalidFlag = 1;
+            numberStudents = strtol(tmp, &eptr, 10);        //convert to int
+            //checking at least one student
+            if(numberStudents == 0)
+                invalidFlag = 1;
+            //set the curse in the list
             setCourse((coursesList+numCourses),courseName, numberRequiredLabs, numberStudents);
+            //make the array list bigger
             coursesList = (Course*) realloc(coursesList, ((++numCourses)+1)*sizeof(Course));
             (coursesList+numCourses)->name = NULL;
 
         }
-        // printf("\n##### End Reading Courses #####\n");
-
-        // printf("\n##### Start Reading Professors #####\n");
+        //--------------------------------------------------------------------------
+        //Read the professors
         for(int x = 0; ; x++){
 
-            int numCourses = 0;
+            int numCourses_loc = 0;
             char *professorFirstName = (char*) calloc(1, MAXBUFFER);
             char *professorLastName  = (char*) calloc(1, MAXBUFFER);
-            char **courses = (char**) calloc(1,sizeof(char **));
+            char **courses = (char**) calloc(1,sizeof(char *));        //store the array of courses
 
             int state;
 
-            state = readToken(professorFirstName,MAXBUFFER,inputFileptr);
+            state = readToken(professorFirstName,inputFileptr);
 
+            //if it is T, then it is the end
             if(professorFirstName[0] == 'T' && professorFirstName[1] == '\0'){
                 // free(professorFirstName);
                 // free(professorLastName);
                 break;
             }
-            state = readToken(professorLastName,MAXBUFFER,inputFileptr);
-            // printf("\n%d. %s %s", x+1, professorFirstName, professorLastName);
+            state = readToken(professorLastName,inputFileptr);
 
+            //check if the first or last name is T, P or S
+            if(strcmp(professorFirstName,"T") == 0 || strcmp(professorLastName,"T") == 0 || strcmp(professorFirstName,"P") == 0 || strcmp(professorLastName,"P") == 0 ||strcmp(professorFirstName,"S") == 0 || strcmp(professorLastName,"S") == 0)
+                invalidFlag = 1;
+            
+            //check that the name is only English letter not 
+            for(int j = 0; j < MAXBUFFER && professorFirstName[j] != '\0'; j++){
+                if(!((professorFirstName[j] >= 'a' && professorFirstName[j] <= 'z') ||(professorFirstName[j] >= 'A' && professorFirstName[j] <= 'Z'))){
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+
+            for(int j = 0; j < MAXBUFFER && professorLastName[j] != '\0'; j++){
+                if(!((professorLastName[j] >= 'a' && professorLastName[j] <= 'z') ||(professorLastName[j] >= 'A' && professorLastName[j] <= 'Z'))){
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+            //read the courses untill it is the endline
             while(1){
-                *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
-                state = readToken(courses[numCourses],MAXBUFFER,inputFileptr);
+                *(courses+numCourses_loc) = (char*) calloc(MAXBUFFER,sizeof(char));
+                state = readToken(courses[numCourses_loc],inputFileptr);
 
+                //Check that this course exists in the list of courses
+                int found = 0;
+                for(int j = 0; j < numCourses; j++){
+                    if(strcmp(coursesList[j].name, courses[numCourses_loc]) == 0){
+                        found = 1;
+                        break;
+                    }
+                }
+                if(found != 1){
+                    invalidFlag = 1;
+                }
+                //check that the name is only English letter not 
+                for(int j = 0; j < MAXBUFFER && courses[numCourses_loc][j] != '\0'; j++){
+                    if(!((courses[numCourses_loc][j] >= 'a' && courses[numCourses_loc][j] <= 'z') ||(courses[numCourses_loc][j] >= 'A' && courses[numCourses_loc][j] <= 'Z'))){
+                        
+                        invalidFlag = 1;
+                        break;
+                    }
+                }
+
+                courses = (char**) realloc(courses, ((++numCourses_loc)+1)*sizeof(char*));
+                //if it is endline, then it is end of courses lists
                 if(state == 2)
                     break;
-                
-                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
-
             }
-            setProfessor((professorsList+numProf),professorFirstName, professorLastName,courses,numCourses+1);
+            //if there is no given courses for him
+            if(numCourses_loc == 0)
+                invalidFlag = 1;
+
+            setProfessor((professorsList+numProf),professorFirstName, professorLastName,courses,numCourses_loc);
             professorsList = (Professor*) realloc(professorsList, ((++numProf)+1)*sizeof(Professor));
 
         }
-        // printf("\n##### End Reading Professors #####\n");
-
-        // printf("\n##### Start Reading TAs #####\n");
+        //--------------------------------------------------------------------------
+        //Start reading TAs
         for(int x = 0; ; x++){
             
-            int numCourses = 0;
-            char *TAFirstName = (char*) calloc(1, MAXBUFFER);
-            char *TALastName  = (char*) calloc(1, MAXBUFFER);
-            char **courses = (char**) calloc(numCourses+1,sizeof(char*));
+            int numCourses_loc = 0;
+            char *TAFirstName = (char*) calloc(1, MAXBUFFER*sizeof(char));
+            char *TALastName  = (char*) calloc(1, MAXBUFFER*sizeof(char));
+            char **courses = (char**) calloc(1,sizeof(char*));
 
             int state;
 
-            state = readToken(TAFirstName,MAXBUFFER,inputFileptr);
+            state = readToken(TAFirstName,inputFileptr);
             if(TAFirstName[0] == 'S' && TAFirstName[1] == '\0'){
-                // free(TAFirstName);
-                // free(TALastName);
                 break;
             }
-            state = readToken(TALastName,MAXBUFFER,inputFileptr);
+            state = readToken(TALastName,inputFileptr);
 
-            // printf("\n%d. %s %s", x+1, TAFirstName, TALastName);
-            
+
+            //check that the name is only English letter not 
+            for(int j = 0; j < MAXBUFFER && TAFirstName[j] != '\0'; j++){
+                if(!((TAFirstName[j] >= 'a' && TAFirstName[j] <= 'z') ||(TAFirstName[j] >= 'A' && TAFirstName[j] <= 'Z'))){
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+            for(int j = 0; j < MAXBUFFER && TALastName[j] != '\0'; j++){
+                if(!((TALastName[j] >= 'a' && TALastName[j] <= 'z') ||(TALastName[j] >= 'A' && TALastName[j] <= 'Z'))){
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+            //check if the first or last name is T, P or S this will be invalid
+            if(strcmp(TAFirstName,"T") == 0 || strcmp(TALastName,"T") == 0 || strcmp(TAFirstName,"P") == 0 || strcmp(TALastName,"P") == 0 ||strcmp(TAFirstName,"S") == 0 || strcmp(TALastName,"S") == 0)
+                invalidFlag = 1;
             while(1){
-                *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
-                state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
+                courses[numCourses_loc] = (char*) calloc(1, MAXBUFFER*sizeof(char));
+                state = readToken(courses[numCourses_loc],inputFileptr);
+
+                //Check that this course exists in the list of courses
+                int found = 0;
+                for(int j = 0; j < numCourses; j++){
+                    if(strcmp(coursesList[j].name, courses[numCourses_loc]) == 0){
+                        found = 1;
+                        break;
+                    }
+                }
+                if(found != 1){
+                    invalidFlag = 1;
+                }
+
+                //check that the name is only English letter not 
+                for(int j = 0; j < MAXBUFFER && courses[numCourses_loc][j] != '\0'; j++){
+                    if(!((courses[numCourses_loc][j] >= 'a' && courses[numCourses_loc][j] <= 'z') ||(courses[numCourses_loc][j] >= 'A' && courses[numCourses_loc][j] <= 'Z'))){
+                        
+                        invalidFlag = 1;
+                        break;
+                    }
+                }
+
+                courses = (char**) realloc(courses, ((++numCourses_loc)+1)*sizeof(char*));
                 //New line
-                // printf(" %s",*(courses+numCourses));
                 if(state == 2)
                     break;
-                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
             }
-            
-            // printf("\n");
-            setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses+1);
+            //if there is no given courses for him
+            if(numCourses_loc == 0)
+                invalidFlag = 1;
+
+            setTA((TAsList+numTA),TAFirstName, TALastName,courses,numCourses_loc);
             TAsList = (TA*) realloc(TAsList, ((++numTA)+1)*sizeof(TA));
-            // free(courses); 
 
         
         }
-        // printf("\n##### End Reading TAs #####\n");
-
-        // printf("\n##### Start Reading Students #####\n");
+        //--------------------------------------------------------------------------
+        //Start reading students
         for(int x = 0; ; x++){
 
-            int numCourses = 0;
+            int numCourses_loc = 0;
             char *studentFirstName = (char*) calloc(1, MAXBUFFER);
             char *studentLastName  = (char*) calloc(1, MAXBUFFER);
             char *studentID        = (char*) calloc(1, MAXBUFFER);
-            char **courses = (char**) calloc(numCourses+1,sizeof(char*));
+            char **courses = (char**) calloc(1,sizeof(char*));
 
             
             int state;
 
-            state = readToken(studentFirstName,MAXBUFFER,inputFileptr);
-            state = readToken(studentLastName,MAXBUFFER,inputFileptr);
-            state = readToken(studentID,MAXBUFFER,inputFileptr);
-
-            // printf("\n%d. %s %s %s", x+1, studentFirstName, studentLastName, studentID);
-            
-            while(1){
-                *(courses+numCourses) = (char*) calloc(MAXBUFFER,sizeof(char *));
-                state = readToken(*(courses+numCourses),MAXBUFFER,inputFileptr);
-                //New line
-                // printf(" %s",*(courses+numCourses));
-                // free(trainedCourse);
-                if(state == 2 || state == 3)
-                    break;
-                courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
-            }
-            // printf("\n");
-            setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses+1);
-            studentsList = (Student*) realloc(studentsList, ((++numStudents)+1)*sizeof(Student));
-
+            state = readToken(studentFirstName,inputFileptr);
+            //if it end of file, then this is the end of students
             if(state == 3){
-                // free(studentFirstName);
-                // free(studentLastName);
-                // free(studentID);
                 break;
             }
+
+            state = readToken(studentLastName,inputFileptr);
+            state = readToken(studentID,inputFileptr);
+
+            //check if the first or last name is T, P or S this will be invalid
+            if(strcmp(studentFirstName,"T") == 0 || strcmp(studentLastName,"T") == 0 || strcmp(studentFirstName,"P") == 0 || strcmp(studentLastName,"P") == 0 ||strcmp(studentFirstName,"S") == 0 || strcmp(studentLastName,"S") == 0)
+                invalidFlag = 1;
+            
+            //check that the name is only English letter not 
+            for(int j = 0; j < MAXBUFFER && studentFirstName[j] != '\0'; j++){
+                if(!((studentFirstName[j] >= 'a' && studentFirstName[j] <= 'z') ||(studentFirstName[j] >= 'A' && studentFirstName[j] <= 'Z'))){
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+            for(int j = 0; j < MAXBUFFER && studentLastName[j] != '\0'; j++){
+                if(!((studentLastName[j] >= 'a' && studentLastName[j] <= 'z') ||(studentLastName[j] >= 'A' && studentLastName[j] <= 'Z'))){
+                    invalidFlag = 1;
+                    break;
+                }
+            }
+            
+            while(1){
+                courses[numCourses_loc] = (char*) calloc(1, MAXBUFFER*sizeof(char));
+                state = readToken(courses[numCourses_loc],inputFileptr);
+
+                //Check that this course exists in the list of courses
+                int found = 0;
+                for(int j = 0; j < numCourses; j++){
+                    if(strcmp(coursesList[j].name, courses[numCourses_loc]) == 0){
+                        found = 1;
+                        break;
+                    }
+                }
+                if(found != 1){
+                    invalidFlag = 1;
+                }
+
+                //check that the name is only English letter not 
+                for(int j = 0; j < MAXBUFFER && courses[numCourses_loc][j] != '\0'; j++){
+                    if(!((courses[numCourses_loc][j] >= 'a' && courses[numCourses_loc][j] <= 'z') ||(courses[numCourses_loc][j] >= 'A' && courses[numCourses_loc][j] <= 'Z'))){
+                        
+                        invalidFlag = 1;
+                        break;
+                    }
+                }
+                courses = (char**) realloc(courses, ((++numCourses_loc)+1)*sizeof(char*));
+                //New line or end of file
+                if(state == 2 || state == 3)
+                    break;
+
+            }
+            //if there is no given courses for him
+            if(numCourses_loc == 0)
+                invalidFlag = 1;
+
+            setStudent((studentsList+numStudents),studentFirstName, studentLastName, studentID, courses, numCourses_loc);
+            studentsList = (Student*) realloc(studentsList, ((++numStudents)+1)*sizeof(Student));
+
         
         }
-        // printf("\n##### End Reading Students #####\n");
-
-        
-        
-        // printf("\n##### Start Logic #####\n");
-
-        
-
+        //--------------------------------------------------------------------------
+        if(invalidFlag == 1){
+            fprintf(outputFileptr,"%s","Invalid input.");
+            if(coursesList != NULL)
+                free(coursesList);
+            if(professorsList != NULL)
+                free(professorsList);
+            if(TAsList != NULL)
+                free(TAsList);
+            if(studentsList != NULL)
+                free(studentsList);
+            fclose(inputFileptr);
+            fclose(outputFileptr);
+            continue;
+        }
+        //Allocate memory for schedule and badness to be passed to solve
         Schedule *schedule = (Schedule*) calloc(1, sizeof(Schedule));
         Badness *badness = (Badness*) calloc(BADNESSSIZE,sizeof(Badness));
-        schedule->courses = (Course**) calloc(1,(numCourses+1)*sizeof(Course*));
+        schedule->courses = (Course**) calloc((numCourses+1),sizeof(Course*));
+        //initialize the schedule
         schedule->numCourses = 0;
         schedule->totalPoints = 0;
 
+        //Allocate memory for bestschedule and bestbadness in order to be pplicable to be used in storing the optimal
         bestSchedule = (BestSchedule*) calloc(1, sizeof(BestSchedule));
-        bestSchedule->courses = (BestCourse*) calloc(1,(numCourses+1)*sizeof(BestCourse));
+        bestSchedule->courses = (BestCourse*) calloc((numCourses+1),sizeof(BestCourse));
         for(int x = 0; x < numCourses; x++){
-            bestSchedule->courses[x].TAs = (TA*) calloc(1,(numTA+1)*sizeof(TA));  //array of TAs
-            bestSchedule->courses[x].students = (Student*) calloc(1,(numStudents+1)*sizeof(Student));   //array of students
+            bestSchedule->courses[x].TAs = (TA*) calloc((numTA+1),sizeof(TA));  //array of TAs
+            bestSchedule->courses[x].students = (Student*) calloc((numStudents+1),sizeof(Student));   //array of students
         }
-
         bestBadness = (BestBadness*) calloc(BADNESSSIZE,sizeof(Badness));
 
+        //Call the function to start get all the possible combinations and compare it
         solve(coursesList,professorsList,TAsList,studentsList,schedule,badness);
-        // printf("\n##### End Logic #####\n");
-
-
-        // printf("#######FINAL######\n");
-        // printBestSchedule(bestSchedule,bestBadness);
-        // printf("#######FINAL######\n");
+        //ouptut the optimal solution
         formatOutput(bestSchedule,bestBadness,outputFileptr);
-        
+
+        //--------------------------------------------------------------------------
+        //Free memory and close
         free(coursesList);
         free(professorsList);
         free(TAsList);
@@ -1163,8 +1318,8 @@ int main(){
         fclose(inputFileptr);
         fclose(outputFileptr);
     }
-
+    //output the last file
     FILE *endFileptr = fopen("HanyHamedEmail.txt","w");
-    fprintf(endFileptr,"h.hamed.elanwar@gmail.com\n");
+    fprintf(endFileptr,"h.hamed@innopolis.university\n");
     fclose(endFileptr);
 }

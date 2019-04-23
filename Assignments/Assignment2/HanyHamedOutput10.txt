@@ -15,11 +15,8 @@ Munir Makhmutov
 Munir Makhmutov
 Munir Makhmutov
 Mark Lancaster 02930
-John Smith 92383
 Andy Turner 23498
-Peter Myles 29398
 
 Philosophy cannot be run.
 Giancarlo Succi is unassigned.
-John Smith is lacking Philosophy.
-Total score is 31.
+Total score is 30.
