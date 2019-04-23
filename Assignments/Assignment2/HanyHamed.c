@@ -838,15 +838,25 @@ void solve(Course *sCoursesList, Professor *sProfessorsList, TA *sTAsList, Stude
 }
 
 int main(){
-
+    int upperbound = 0;
     for(int i = 1 ; i  <= 50; i++){
         char inputFileName[12];
         char outputFileName[21];
 
-        Course *coursesList = (Course*) calloc(numCourses+1, sizeof(Course));
-        Professor *professorsList = (Professor*) calloc(numProf+1, sizeof(Professor));
-        TA *TAsList = (TA*) calloc(numTA+1, sizeof(TA));
-        Student *studentsList = (Student*) calloc(numStudents+1, sizeof(Student));
+
+        sprintf(inputFileName,"%s%d%s",inputFileNamePrefix,i,fileExtension);
+        sprintf(outputFileName,"%s%d%s",outputFileNamePrefix,i,fileExtension);
+
+        FILE *inputFileptr = fopen(inputFileName,"r");
+        if(inputFileptr != NULL)
+            upperbound = i;
+    }
+    // printf("%d\n",upperbound);
+
+    for(int i = 1 ; i  <= upperbound; i++){
+        // printf("File #%d\n",i);
+        char inputFileName[12];
+        char outputFileName[21];
 
 
         sprintf(inputFileName,"%s%d%s",inputFileNamePrefix,i,fileExtension);
@@ -854,22 +864,18 @@ int main(){
 
         FILE *inputFileptr = fopen(inputFileName,"r");
         if(inputFileptr == NULL){
-            sprintf(inputFileName,"%s%d%s",inputFileNamePrefix,i+1,fileExtension);
-            FILE *inputFileptr = fopen(inputFileName,"r");
-            if(inputFileptr == NULL)
-                break;
-
-            else{
-                if(i > 1){
-                    FILE *outputFileptr = fopen(outputFileName,"w");
-                    fprintf(outputFileptr,"%s","Invalid input.");
-                    // fclose(inputFileptr);
-                    fclose(outputFileptr);
-                }
-                break;
-            }
+            FILE *outputFileptr = fopen(outputFileName,"w");
+            fprintf(outputFileptr,"%s","Invalid input.");
+            fclose(outputFileptr);
+            continue;
         }
-            
+
+
+        // printf("State: Opened\n");
+        Course *coursesList = (Course*) calloc(numCourses+1, sizeof(Course));
+        Professor *professorsList = (Professor*) calloc(numProf+1, sizeof(Professor));
+        TA *TAsList = (TA*) calloc(numTA+1, sizeof(TA));
+        Student *studentsList = (Student*) calloc(numStudents+1, sizeof(Student));    
         FILE *outputFileptr = fopen(outputFileName,"w");
 
         // printf("%s\t%s\n", inputFileName,outputFileName);
@@ -932,14 +938,9 @@ int main(){
                 courses = (char**) realloc(courses, ((++numCourses)+1)*sizeof(char*));
 
             }
-            // printf("\n");
-            // for(int j = 0 ; j < numCourses+1; j++){
-            //     printf("Course: %s\n",courses[j]);
-            // }
             setProfessor((professorsList+numProf),professorFirstName, professorLastName,courses,numCourses+1);
             professorsList = (Professor*) realloc(professorsList, ((++numProf)+1)*sizeof(Professor));
 
-            // free(courses);        
         }
         // printf("\n##### End Reading Professors #####\n");
 
@@ -1061,6 +1062,8 @@ int main(){
         free(studentsList);
         free(badness);
         fclose(inputFileptr);
+        free(bestSchedule);
+        free(bestBadness);
         fclose(outputFileptr);
     }
 
