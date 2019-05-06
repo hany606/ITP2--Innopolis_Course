@@ -1,6 +1,13 @@
 /*
--S assembly code
--c object file
+-S get assembly code
+-c get object file from c file
+
+gcc without any flag to get executable file
+
+get object code from assembly code use <as>
+
+objdump -d to convert from object code to assembly code (to make it readable)
+
 without anything executable file
 read-increment-execute
 
@@ -13,6 +20,16 @@ byte+
 ..
 ..
 with -Og option is the least optimization and make a simple readable assembly file
+
+-O1 is the optimization parameter of the compiler
+O0
+Og
+O1
+O2
+O3
+...
+
+gcc -S -O1 name.c
 */
 
 int main(){
