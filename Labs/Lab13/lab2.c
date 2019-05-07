@@ -1,6 +1,7 @@
 /*
 -S get assembly code
 -c get object file from c file
+-o followed with name of the executable file (get executable file)
 
 gcc without any flag to get executable file
 
