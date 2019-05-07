@@ -12,6 +12,7 @@
  * https://en.cppreference.com/w/c/language/operator_precedence
  * https://stackoverflow.com/questions/859634/c-pointer-to-array-array-of-pointers-disambiguation
  * http://unixwiz.net/techtips/reading-cdecl.html
+ * https://fresh2refresh.com/c-programming/c-structure-padding/
  * 
  * */
 
@@ -120,6 +121,15 @@ struct Final
 };
 
  
+union u
+{
+    struct p
+    {
+        unsigned char x : 2;
+        unsigned int y : 2;
+    }p;
+    int x;
+};
 
 //#ifdef, #ifndef,...
 
@@ -172,6 +182,10 @@ int main(){
 
     printf("%d\n",sizeof(*arr2));
     // printf("%d\n",arr++);
+
+    union u u;
+    u.p.x = 2;
+    printf("%d\n", u.p.x);
     //Input & Output
     //Using Stack to evaluate expressions --> It is being evaluated from right to left
 
