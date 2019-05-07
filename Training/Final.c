@@ -5,7 +5,7 @@
  * Important Links:
  * https://cdecl.org/       [Abounegm]
  * https://d3s.mff.cuni.cz/legacy/~holub/c_features.html    [Abounegm]
- * https://www.wikiwand.com/en/Digraphs_and_trigraphs
+ * https://www.wikiwand.com/en/Digraphs_and_trigraphs   [Abounegm]
  * https://medium.com/datadriveninvestor/compilation-process-db17c3b58e62
  * https://medium.com/@connorbrereton/what-does-gcc-main-c-do-bc96824a60a4
  * https://stackoverflow.com/questions/840501/how-do-function-pointers-in-c-work
@@ -13,8 +13,8 @@
  * https://stackoverflow.com/questions/859634/c-pointer-to-array-array-of-pointers-disambiguation
  * http://unixwiz.net/techtips/reading-cdecl.html
  * https://fresh2refresh.com/c-programming/c-structure-padding/
- * https://gist.github.com/aabounegm/7bdc77802bee8e57482d058f73e65669
- * 
+ * https://gist.github.com/aabounegm/7bdc77802bee8e57482d058f73e65669   [Abounegm]
+ * https://www.rapidtables.com/code/linux/gcc/gcc-o.html
  * 
  * */
 
