@@ -10,7 +10,8 @@
  * https://medium.com/@connorbrereton/what-does-gcc-main-c-do-bc96824a60a4
  * https://stackoverflow.com/questions/840501/how-do-function-pointers-in-c-work
  * https://en.cppreference.com/w/c/language/operator_precedence
- * 
+ * https://stackoverflow.com/questions/859634/c-pointer-to-array-array-of-pointers-disambiguation
+ * http://unixwiz.net/techtips/reading-cdecl.html
  * 
  * */
 
@@ -147,7 +148,7 @@ int main(){
     struct Final *fpt = &f;
     (*fpt).i = 1;   // => fpt->i = 1; 
 
-    int arr[] = {1,4,5,8};
+    int arr[] = {100,4,5,8};
     int *ptr = arr;
     int tmp  = *ptr++;
     //    int tmp  = *++ptr;
@@ -157,10 +158,19 @@ int main(){
     printf("%d\n",tmp);
 
     //increment the pointer as go after the last element in the array
-    printf("%d\n",&arr+1);
+    printf("%p %p \n",&arr, arr);
+    printf("%d\n",**(&arr+1));      //if you used &arr+1 it will move by array block(type of &arr) but if you used arr+1 it will move by int (type of arr => first element)
     printf("%d\n",*((int*)(&arr)+1));
     printf("%d\n",*((int*)(&arr+2)));   //access other memory
     printf("%d\n",(int)'1'+2);
+
+    int *ptr2 = arr+2;
+    printf("%d\n",ptr2[-2]);
+
+
+    int arr2[3][5];
+
+    printf("%d\n",sizeof(*arr2));
     // printf("%d\n",arr++);
     //Input & Output
     //Using Stack to evaluate expressions --> It is being evaluated from right to left
