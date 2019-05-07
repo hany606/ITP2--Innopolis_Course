@@ -13,6 +13,8 @@
  * https://stackoverflow.com/questions/859634/c-pointer-to-array-array-of-pointers-disambiguation
  * http://unixwiz.net/techtips/reading-cdecl.html
  * https://fresh2refresh.com/c-programming/c-structure-padding/
+ * https://gist.github.com/aabounegm/7bdc77802bee8e57482d058f73e65669
+ * 
  * 
  * */
 
@@ -135,7 +137,26 @@ union u
 
 //copy structures and pointers content
 
+
+void printt(void *A, int n, int flag){
+    for(int i=0;i<n;i++){
+        if(flag==0) {
+            printf("%d ", *(int*)A);
+            A = ((int*)A)+1;
+        }
+        else {
+            printf("%c ", *(char*)A);
+            A++;
+        }
+    }
+    printf("\n");
+}
+
 int main(){
+    int Aa[] ={34,12,67,45,90,16,46,99,10,1};
+    char Ba[] ={'h','a','D','A','w','1',']','D','z','s'};
+    printt(Aa, 10, 0);
+    printt(Ba, 10, 1);
 
     printf("%s\n",toString(asdasd));
     printf("concatenate(123,546)\n");
