@@ -186,7 +186,7 @@ int readToken(char *token,FILE* fptr){
         else if(tmp == EOF)
             flag = 3;
         if(flag > 0){
-            // *(token+counter) = '\0';    
+            // *(token+i) = '\0';    
             return flag;
         }        
         *(token+i) = tmp;     //Store the char in the string
